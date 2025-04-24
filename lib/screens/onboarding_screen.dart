@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../core/constants/colors.dart';
 import 'package:project/widgets/onboarding_page.dart';
 import 'package:project/widgets/page_indicator.dart';
@@ -21,22 +22,19 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       'kcal': 'ZUAMICA',
       'title': 'Eat Healthy',
       'subtitle': 'Maintaining good health should be the primary focus of everyone.',
-      'time': '8:41',
-      'image': 'assets/images/onboarding1.png',
+      'image': 'assets/images/onboarding/onboarding1.png',
     },
     {
       'kcal': 'Healthy Recipes',
       'title': 'Discover Recipes',
       'subtitle': 'Browse thousands of healthy recipes from all over the world.',
-      'time': '8:41',
-      'image': 'assets/images/onboarding2.png',
+      'image': 'assets/images/onboarding/onboarding2.png',
     },
     {
       'kcal': 'Track Progress',
       'title': 'Track Your Health',
       'subtitle': 'With amazing inbuilt tools you can track your progress.',
-      'time': '8:41',
-      'image': 'assets/images/onboarding3.png',
+      'image': 'assets/images/onboarding/onboarding3.png',
     },
   ];
 
@@ -55,30 +53,31 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Set status bar to be transparent and use dark icons for light background
+    SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
+      statusBarColor: Colors.transparent,
+      statusBarIconBrightness: Brightness.dark,
+    ));
+
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
         child: Column(
           children: [
-            // Time indicator (mock)
+            // Top 'kcal' text
             Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    onboardingData[_currentPage]['time']!,
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.textPrimary,
-                    ),
-                  ),
-                ],
+              padding: const EdgeInsets.only(top: 20.0, bottom: 10.0),
+              child: Text(
+                onboardingData[_currentPage]['kcal']!,
+                style: const TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.splashBackground,
+                ),
               ),
             ),
 
-            // Page view
+            // Page view for onboarding content
             Expanded(
               child: PageView.builder(
                 controller: _pageController,
@@ -86,12 +85,12 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 onPageChanged: _onPageChanged,
                 itemBuilder: (context, index) {
                   return OnboardingPage(
-                    kcal: onboardingData[index]['kcal']!,
+                    imagePath: onboardingData[index]['image']!,
                     title: onboardingData[index]['title']!,
                     subtitle: onboardingData[index]['subtitle']!,
                     buttonText: 'Get Started',
-                    loginText: 'Already Have An Account? Log in',
-                    onPressed: _navigateToHome,
+                    loginText: 'Already Have An Account? Log In',
+                    onGetStartedPressed: _navigateToHome,
                   );
                 },
               ),
@@ -99,10 +98,12 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
             // Page indicator
             Padding(
-              padding: const EdgeInsets.only(bottom: 32.0),
+              padding: const EdgeInsets.only(bottom: 40.0),
               child: PageIndicator(
                 currentPage: _currentPage,
                 pageCount: onboardingData.length,
+                activeColor: AppColors.textSecondary,
+                inactiveColor: AppColors.textSecondary.withOpacity(0.3),
               ),
             ),
           ],

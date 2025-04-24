@@ -1,15 +1,17 @@
 import 'package:flutter/material.dart';
 
-import '../core/constants/colors.dart';
-
 class PageIndicator extends StatelessWidget {
   final int currentPage;
   final int pageCount;
+  final Color activeColor;
+  final Color inactiveColor;
 
   const PageIndicator({
     super.key,
     required this.currentPage,
     required this.pageCount,
+    required this.activeColor,
+    required this.inactiveColor,
   });
 
   @override
@@ -23,9 +25,7 @@ class PageIndicator extends StatelessWidget {
           margin: const EdgeInsets.symmetric(horizontal: 4),
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            color: index == currentPage
-                ? AppColors.primary
-                : AppColors.textSecondary.withOpacity(0.3),
+            color: index == currentPage ? activeColor : inactiveColor,
           ),
         );
       }),
