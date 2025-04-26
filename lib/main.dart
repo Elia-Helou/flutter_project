@@ -1,8 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'screens/splash_screen.dart';
+import 'services/database_service.dart';
 // import 'screens/onboarding_screen.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  try {
+    await DatabaseService.instance.connection;
+    print('Database connection established successfully');
+  } catch (e) {
+    print('Error connecting to database: $e');
+  }
+
   runApp(const MyApp());
 }
 
