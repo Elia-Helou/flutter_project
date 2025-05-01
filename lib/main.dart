@@ -11,7 +11,7 @@ void main() async {
     await DatabaseService.instance.connection;
     print('Database connection established successfully');
   } catch (e) {
-    print('Error connecting to database: $e');
+    print('Errorr connecting to database: $e');
   }
 
   runApp(const MyApp());
