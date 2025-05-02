@@ -1,5 +1,5 @@
 import 'base_model.dart';
-import 'Food.dart';
+import 'food.dart';
 
 class Recipe extends BaseModel {
   final String name;
