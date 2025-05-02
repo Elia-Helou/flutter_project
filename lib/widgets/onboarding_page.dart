@@ -10,7 +10,6 @@ class OnboardingPage extends StatelessWidget {
   final String buttonText;
   final String loginText;
   final VoidCallback onGetStartedPressed;
-  // final VoidCallback? onLoginPressed; // Optional: Add if specific login action is needed
 
   const OnboardingPage({
     super.key,
