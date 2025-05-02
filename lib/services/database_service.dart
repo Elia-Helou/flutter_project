@@ -19,7 +19,6 @@ class DatabaseService {
   }
 
   Future<Connection> _initConnection() async {
-    // Load environment variables
     await dotenv.load();
 
     final host = dotenv.env['DB_HOST'] ?? 'localhost';
