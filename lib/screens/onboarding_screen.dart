@@ -4,7 +4,7 @@ import '../core/constants/colors.dart';
 import 'package:project/widgets/onboarding_page.dart';
 import 'package:project/widgets/page_indicator.dart';
 import '../core/constants/colors.dart';
-import 'home_screen.dart';
+import 'auth/login_screen.dart';
 
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});
@@ -44,10 +44,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     });
   }
 
-  void _navigateToHome() {
+  void _navigateToLogin() {
     Navigator.pushReplacement(
       context,
-      MaterialPageRoute(builder: (context) => const HomeScreen()),
+      MaterialPageRoute(builder: (context) => const LoginScreen()),
     );
   }
 
@@ -90,7 +90,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     subtitle: onboardingData[index]['subtitle']!,
                     buttonText: 'Get Started',
                     loginText: 'Already Have An Account? Log In',
-                    onGetStartedPressed: _navigateToHome,
+                    onGetStartedPressed: _navigateToLogin,
                   );
                 },
               ),
