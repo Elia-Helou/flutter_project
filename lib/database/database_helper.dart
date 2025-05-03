@@ -91,7 +91,7 @@ class DatabaseHelper {
     try {
       final conn = await connection;
       final result = await conn.execute(
-        'SELECT * FROM users WHERE email = @email',
+        Sql.named('SELECT * FROM users WHERE email = @email'),
         parameters: {'email': email},
       );
 
@@ -100,6 +100,7 @@ class DatabaseHelper {
       }
 
       final row = result.first.toColumnMap();
+      debugPrint('DB row: $row');
       return row;
     } catch (e) {
       debugPrint('Error getting user: $e');

@@ -12,7 +12,12 @@ class AuthService extends ChangeNotifier {
         throw Exception('User not found');
       }
 
-      if (userData['password'] != password) {
+      final dbPassword = userData['password'];
+      if (dbPassword == null) {
+        throw Exception('Password in database is null');
+      }
+
+      if (dbPassword.toString().trim() != password.trim()) {
         throw Exception('Invalid password');
       }
 
@@ -22,6 +27,7 @@ class AuthService extends ChangeNotifier {
       rethrow;
     }
   }
+
 
   Future<User> register({
     required String email,
