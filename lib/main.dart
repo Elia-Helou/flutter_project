@@ -7,6 +7,7 @@ import 'screens/auth/login_screen.dart';
 import 'screens/auth/signup_screen.dart';
 import 'screens/home_screen.dart';
 import 'providers/user_provider.dart';
+import 'routes/app_routes.dart';
 // import 'screens/onboarding_screen.dart';
 
 void main() async {
@@ -39,13 +40,7 @@ class MyApp extends StatelessWidget {
           useMaterial3: true,
         ),
         initialRoute: '/splash',
-        routes: {
-          '/splash': (context) => const SplashScreen(),
-          '/login': (context) => const LoginScreen(),
-          '/signup': (context) => const SignupScreen(),
-          '/home': (context) => const HomeScreen(),
-          // Add other routes here
-        },
+        routes: Map<String, WidgetBuilder>.from(AppRoutes.routes),
       ),
     );
   }

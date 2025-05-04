@@ -90,6 +90,7 @@ class _SignupScreenState extends State<SignupScreen> {
         dateOfBirth: DateTime.parse(_dateOfBirth),
         height: double.parse(_heightController.text),
         weight: double.parse(_weightController.text),
+        phoneNumber: int.parse(_phoneNumberController.text),
         activityLevel: _activityLevel,
         targetWeight: _goalWeightController.text.isNotEmpty
           ? double.parse(_goalWeightController.text)
@@ -272,7 +273,7 @@ class _SignupScreenState extends State<SignupScreen> {
               controller: _phoneNumberController,
               decoration: InputDecoration(
                 labelText: 'Phone Number',
-                prefixIcon: const Icon(Icons.phone_outlined),
+                prefixIcon: const Icon(Icons.phone),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(15),
                 ),
@@ -283,6 +284,9 @@ class _SignupScreenState extends State<SignupScreen> {
               validator: (value) {
                 if (value == null || value.isEmpty) {
                   return 'Please enter your phone number';
+                }
+                if (int.tryParse(value) == null) {
+                  return 'Phone number must be digits only';
                 }
                 return null;
               },

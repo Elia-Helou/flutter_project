@@ -4,10 +4,10 @@ import 'package:project/screens/onboarding_screen.dart';
 import 'package:project/screens/auth/login_screen.dart';
 import 'package:project/screens/auth/signup_screen.dart';
 import 'package:project/screens/home_screen.dart';
+import 'package:project/screens/profile_screen.dart';
 // import 'package:project/screens/search_screen.dart';
 // import 'package:project/screens/add_screen.dart';
 // import 'package:project/screens/favorites_screen.dart';
-// import 'package:project/screens/profile_screen.dart';
 
 class AppRoutes {
   static const String splash = '/splash';
@@ -29,6 +29,6 @@ class AppRoutes {
     // search: (context) => const SearchScreen(),
     // add: (context) => const AddScreen(),
     // favorites: (context) => const FavoritesScreen(),
-    // profile: (context) => const ProfileScreen(),
+    profile: (context) => const ProfileScreen(),
   };
 }

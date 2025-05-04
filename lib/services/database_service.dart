@@ -119,6 +119,7 @@ class DatabaseService {
     required String dateOfBirth,
     required String height,
     required String weight,
+    required int phoneNumber,
     String? activityLevel,
     String? targetWeight,
   }) async {
@@ -141,10 +142,12 @@ class DatabaseService {
         INSERT INTO users (
           email, password, first_name, last_name,
           gender, date_of_birth, height, weight,
+          phone_number,
           activity_level, target_weight
         ) VALUES (
           @email, @password, @firstName, @lastName,
           @gender, @dateOfBirth, @height, @weight,
+          @phoneNumber,
           @activityLevel, @targetWeight
         ) RETURNING *
         '''),
@@ -157,6 +160,7 @@ class DatabaseService {
           'dateOfBirth': dateOfBirth,
           'height': height,
           'weight': weight,
+          'phoneNumber': phoneNumber,
           'activityLevel': activityLevel,
           'targetWeight': targetWeight,
         },

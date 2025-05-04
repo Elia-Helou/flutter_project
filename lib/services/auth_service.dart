@@ -39,6 +39,7 @@ class AuthService extends ChangeNotifier {
     required DateTime dateOfBirth,
     required double height,
     required double weight,
+    required int phoneNumber,
     String? activityLevel,
     double? targetWeight,
   }) async {
@@ -56,6 +57,7 @@ class AuthService extends ChangeNotifier {
         dateOfBirth: dateOfBirth.toIso8601String().split('T')[0], // Format as YYYY-MM-DD
         height: height.toString(),
         weight: weight.toString(),
+        phoneNumber: phoneNumber,
         activityLevel: activityLevel,
         targetWeight: targetWeight?.toString(),
       );
