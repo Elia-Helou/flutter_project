@@ -14,17 +14,11 @@ class AuthService extends ChangeNotifier {
       }
 
       final dbPassword = userData['password'];
-      print('Stored Password Hash: $dbPassword');
-      print('Entered Password Hash: $password');
-      String hashedPassword = BCrypt.hashpw(password, BCrypt.gensalt());
-
-      print('Hashed Password: $hashedPassword');
       if (dbPassword == null) {
         throw Exception('Password in database is null');
       }
 
       final isPasswordCorrect = BCrypt.checkpw(password, dbPassword);
-      print(isPasswordCorrect);
       if (!isPasswordCorrect) {
         throw Exception('Invalid password');
       }
@@ -36,40 +30,40 @@ class AuthService extends ChangeNotifier {
     }
   }
 
-
-  Future<User> register({
+  Future<User?> register({
     required String email,
     required String password,
     required String firstName,
     required String lastName,
-    required String phoneNumber,
     required String gender,
-    required String dateOfBirth,
-    required String height,
-    required String weight,
-    required String goalWeight,
-    required String activityLevel,
-    required String goal,
+    required DateTime dateOfBirth,
+    required double height,
+    required double weight,
+    String? activityLevel,
+    double? targetWeight,
   }) async {
     try {
+      // Hash the password
+      final hashedPassword = BCrypt.hashpw(password, BCrypt.gensalt());
+
+      // Create user in database
       await _dbHelper.createUser(
         email: email,
-        password: password,
+        password: hashedPassword,
         firstName: firstName,
         lastName: lastName,
-        phoneNumber: phoneNumber,
         gender: gender,
-        dateOfBirth: dateOfBirth,
-        height: height,
-        weight: weight,
-        goalWeight: goalWeight,
+        dateOfBirth: dateOfBirth.toIso8601String().split('T')[0], // Format as YYYY-MM-DD
+        height: height.toString(),
+        weight: weight.toString(),
         activityLevel: activityLevel,
-        goal: goal,
+        targetWeight: targetWeight?.toString(),
       );
 
+      // Fetch the created user
       final userData = await _dbHelper.getUserByEmail(email);
       if (userData == null) {
-        throw Exception('Failed to create user');
+        throw Exception('Failed to fetch created user');
       }
 
       return User.fromMap(userData);
@@ -79,44 +73,42 @@ class AuthService extends ChangeNotifier {
     }
   }
 
-  Future<bool> updateProfile({
+  Future<void> updateProfile({
     required String email,
     required String firstName,
     required String lastName,
-    required String phoneNumber,
     required String gender,
-    required String dateOfBirth,
-    required String height,
-    required String weight,
-    required String goalWeight,
-    required String activityLevel,
-    required String goal,
+    required DateTime dateOfBirth,
+    required double height,
+    required double weight,
+    String? activityLevel,
+    double? targetWeight,
   }) async {
     try {
-      return await _dbHelper.updateUserProfile(
+      await _dbHelper.updateUserProfile(
         email: email,
         firstName: firstName,
         lastName: lastName,
-        phoneNumber: phoneNumber,
         gender: gender,
-        dateOfBirth: dateOfBirth,
-        height: height,
-        weight: weight,
-        goalWeight: goalWeight,
+        dateOfBirth: dateOfBirth.toIso8601String().split('T')[0],
+        height: height.toString(),
+        weight: weight.toString(),
         activityLevel: activityLevel,
-        goal: goal,
+        targetWeight: targetWeight?.toString(),
       );
+      notifyListeners();
     } catch (e) {
       debugPrint('Update profile error: $e');
       rethrow;
     }
   }
 
-  Future<bool> changePassword(String email, String newPassword) async {
+  Future<void> updatePassword(String email, String newPassword) async {
     try {
-      return await _dbHelper.updateUserPassword(email, newPassword);
+      final hashedPassword = BCrypt.hashpw(newPassword, BCrypt.gensalt());
+      await _dbHelper.updateUserPassword(email, hashedPassword);
     } catch (e) {
-      debugPrint('Change password error: $e');
+      debugPrint('Update password error: $e');
       rethrow;
     }
   }

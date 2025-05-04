@@ -12,7 +12,6 @@ class DatabaseHelper {
     return await DatabaseService.instance.connection;
   }
 
-
   Future<bool> checkConnection() async {
     try {
       final conn = await connection;
@@ -29,21 +28,19 @@ class DatabaseHelper {
     required String password,
     required String firstName,
     required String lastName,
-    required String phoneNumber,
     required String gender,
     required String dateOfBirth,
     required String height,
     required String weight,
-    required String goalWeight,
-    required String activityLevel,
-    required String goal,
+    String? activityLevel,
+    String? targetWeight,
   }) async {
     try {
       final conn = await connection;
       
       // Check if user already exists
       final checkResult = await conn.execute(
-        'SELECT COUNT(*) FROM users WHERE email = @email',
+        Sql.named('SELECT COUNT(*) FROM users WHERE email = @email'),
         parameters: {'email': email},
       );
 
@@ -53,30 +50,28 @@ class DatabaseHelper {
 
       // Insert new user
       await conn.execute(
-        '''
+        Sql.named('''
         INSERT INTO users (
-          email, password, first_name, last_name, phone_number,
-          gender, date_of_birth, height, weight, goal_weight,
-          activity_level, goal
+          email, password, first_name, last_name,
+          gender, date_of_birth, height, weight,
+          activity_level, target_weight
         ) VALUES (
-          @email, @password, @firstName, @lastName, @phoneNumber,
-          @gender, @dateOfBirth, @height, @weight, @goalWeight,
-          @activityLevel, @goal
+          @email, @password, @firstName, @lastName,
+          @gender, @dateOfBirth, @height, @weight,
+          @activityLevel, @targetWeight
         )
-        ''',
+        '''),
         parameters: {
           'email': email,
           'password': password,
           'firstName': firstName,
           'lastName': lastName,
-          'phoneNumber': phoneNumber,
           'gender': gender,
           'dateOfBirth': dateOfBirth,
           'height': height,
           'weight': weight,
-          'goalWeight': goalWeight,
           'activityLevel': activityLevel,
-          'goal': goal,
+          'targetWeight': targetWeight,
         },
       );
 
@@ -112,46 +107,40 @@ class DatabaseHelper {
     required String email,
     required String firstName,
     required String lastName,
-    required String phoneNumber,
     required String gender,
     required String dateOfBirth,
     required String height,
     required String weight,
-    required String goalWeight,
-    required String activityLevel,
-    required String goal,
+    String? activityLevel,
+    String? targetWeight,
   }) async {
     try {
       final conn = await connection;
       
       await conn.execute(
-        '''
+        Sql.named('''
         UPDATE users SET
           first_name = @firstName,
           last_name = @lastName,
-          phone_number = @phoneNumber,
           gender = @gender,
           date_of_birth = @dateOfBirth,
           height = @height,
           weight = @weight,
-          goal_weight = @goalWeight,
           activity_level = @activityLevel,
-          goal = @goal,
+          target_weight = @targetWeight,
           updated_at = CURRENT_TIMESTAMP
         WHERE email = @email
-        ''',
+        '''),
         parameters: {
           'email': email,
           'firstName': firstName,
           'lastName': lastName,
-          'phoneNumber': phoneNumber,
           'gender': gender,
           'dateOfBirth': dateOfBirth,
           'height': height,
           'weight': weight,
-          'goalWeight': goalWeight,
           'activityLevel': activityLevel,
-          'goal': goal,
+          'targetWeight': targetWeight,
         },
       );
 
@@ -167,7 +156,7 @@ class DatabaseHelper {
       final conn = await connection;
       
       await conn.execute(
-        'UPDATE users SET password = @password, updated_at = CURRENT_TIMESTAMP WHERE email = @email',
+        Sql.named('UPDATE users SET password = @password, updated_at = CURRENT_TIMESTAMP WHERE email = @email'),
         parameters: {
           'email': email,
           'password': newPassword,

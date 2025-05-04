@@ -1,5 +1,6 @@
 import 'package:postgres/postgres.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:flutter/services.dart' show rootBundle;
 import '../models/user.dart';
 
 class DatabaseService {
@@ -16,6 +17,7 @@ class DatabaseService {
   Future<Connection> get connection async {
     if (_connection != null) return _connection!;
     _connection = await _initConnection();
+    await _initializeDatabase();
     return _connection!;
   }
 
@@ -48,6 +50,37 @@ class DatabaseService {
     }
   }
 
+  Future<void> _initializeDatabase() async {
+    try {
+      final conn = await connection;
+      
+      // Create users table
+      await conn.execute('''
+        CREATE TABLE IF NOT EXISTS users (
+          id SERIAL PRIMARY KEY,
+          email VARCHAR(255) UNIQUE NOT NULL,
+          password VARCHAR(255) NOT NULL,
+          first_name VARCHAR(100) NOT NULL,
+          last_name VARCHAR(100) NOT NULL,
+          date_of_birth DATE NOT NULL,
+          gender VARCHAR(20) NOT NULL,
+          height DECIMAL(5,2) NOT NULL,
+          weight DECIMAL(5,2) NOT NULL,
+          activity_level VARCHAR(50),
+          profile_image_url VARCHAR(255),
+          target_weight DECIMAL(5,2),
+          created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+          updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+        );
+      ''');
+      
+      print('Database initialized successfully');
+    } catch (e) {
+      print('Error initializing database: $e');
+      rethrow;
+    }
+  }
+
   Future<void> close() async {
     await _connection?.close();
     _connection = null;
@@ -58,10 +91,9 @@ class DatabaseService {
     try {
       final conn = await connection;
       final result = await conn.execute(
-        'SELECT * FROM users WHERE email = @email AND password = @password',
+        Sql.named('SELECT * FROM users WHERE email = @email'),
         parameters: {
           'email': email,
-          'password': password,
         },
       );
 
@@ -73,7 +105,7 @@ class DatabaseService {
       return User.fromMap(userData);
     } catch (e) {
       print('Error during login: $e');
-      return null;
+      rethrow;
     }
   }
 
@@ -83,21 +115,19 @@ class DatabaseService {
     required String password,
     required String firstName,
     required String lastName,
-    required String phoneNumber,
     required String gender,
     required String dateOfBirth,
     required String height,
     required String weight,
-    required String goalWeight,
-    required String activityLevel,
-    required String goal,
+    String? activityLevel,
+    String? targetWeight,
   }) async {
     try {
       final conn = await connection;
       
       // Check if email already exists
       final checkResult = await conn.execute(
-        'SELECT id FROM users WHERE email = @email',
+        Sql.named('SELECT id FROM users WHERE email = @email'),
         parameters: {'email': email},
       );
       
@@ -107,30 +137,28 @@ class DatabaseService {
 
       // Insert new user
       final result = await conn.execute(
-        '''
+        Sql.named('''
         INSERT INTO users (
-          email, password, first_name, last_name, phone_number,
-          gender, date_of_birth, height, weight, goal_weight,
-          activity_level, goal, created_at, updated_at
+          email, password, first_name, last_name,
+          gender, date_of_birth, height, weight,
+          activity_level, target_weight
         ) VALUES (
-          @email, @password, @firstName, @lastName, @phoneNumber,
-          @gender, @dateOfBirth, @height, @weight, @goalWeight,
-          @activityLevel, @goal, NOW(), NOW()
+          @email, @password, @firstName, @lastName,
+          @gender, @dateOfBirth, @height, @weight,
+          @activityLevel, @targetWeight
         ) RETURNING *
-        ''',
+        '''),
         parameters: {
           'email': email,
           'password': password,
           'firstName': firstName,
           'lastName': lastName,
-          'phoneNumber': phoneNumber,
           'gender': gender,
           'dateOfBirth': dateOfBirth,
           'height': height,
           'weight': weight,
-          'goalWeight': goalWeight,
           'activityLevel': activityLevel,
-          'goal': goal,
+          'targetWeight': targetWeight,
         },
       );
 
