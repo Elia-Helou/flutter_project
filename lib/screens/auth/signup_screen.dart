@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../../services/auth_service.dart';
 import '../../core/constants/colors.dart';
+import '../../providers/user_provider.dart';
 
 class SignupScreen extends StatefulWidget {
   const SignupScreen({Key? key}) : super(key: key);
@@ -70,7 +71,7 @@ class _SignupScreenState extends State<SignupScreen> {
 
     try {
       final authService = Provider.of<AuthService>(context, listen: false);
-      
+
       // Show loading indicator
       showDialog(
         context: context,
@@ -90,7 +91,7 @@ class _SignupScreenState extends State<SignupScreen> {
         height: double.parse(_heightController.text),
         weight: double.parse(_weightController.text),
         activityLevel: _activityLevel,
-        targetWeight: _goalWeightController.text.isNotEmpty 
+        targetWeight: _goalWeightController.text.isNotEmpty
           ? double.parse(_goalWeightController.text)
           : null,
       );
@@ -98,7 +99,7 @@ class _SignupScreenState extends State<SignupScreen> {
       if (mounted) {
         // Close loading indicator
         Navigator.pop(context);
-        
+
         // Show success message
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -114,7 +115,7 @@ class _SignupScreenState extends State<SignupScreen> {
       if (mounted) {
         // Close loading indicator if it's showing
         Navigator.pop(context);
-        
+
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(e.toString()),

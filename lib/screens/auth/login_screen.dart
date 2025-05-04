@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../../services/auth_service.dart';
 import 'signup_screen.dart';
 import '../../core/constants/colors.dart';
+import '../../providers/user_provider.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({Key? key}) : super(key: key);
@@ -35,6 +36,7 @@ class _LoginScreenState extends State<LoginScreen> {
       );
 
       if (user != null && mounted) {
+        Provider.of<UserProvider>(context, listen: false).setUser(user);
         Navigator.pushReplacementNamed(context, '/home');
       }
     } catch (e) {
