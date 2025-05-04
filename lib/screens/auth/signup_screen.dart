@@ -71,29 +71,56 @@ class _SignupScreenState extends State<SignupScreen> {
 
     try {
       final authService = Provider.of<AuthService>(context, listen: false);
-      final user = await authService.register(
+
+      // Show loading indicator
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => const Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
+
+      await authService.register(
         email: _emailController.text.trim(),
         password: _passwordController.text,
         firstName: _firstNameController.text.trim(),
         lastName: _lastNameController.text.trim(),
-        phoneNumber: _phoneNumberController.text.trim(),
         gender: _gender,
-        dateOfBirth: _dateOfBirth,
-        height: _heightController.text,
-        weight: _weightController.text,
-        goalWeight: _goalWeightController.text,
+        dateOfBirth: DateTime.parse(_dateOfBirth),
+        height: double.parse(_heightController.text),
+        weight: double.parse(_weightController.text),
         activityLevel: _activityLevel,
-        goal: _goal,
+        targetWeight: _goalWeightController.text.isNotEmpty
+          ? double.parse(_goalWeightController.text)
+          : null,
       );
 
-      if (user != null && mounted) {
-        Provider.of<UserProvider>(context, listen: false).setUser(user);
-        Navigator.pushReplacementNamed(context, '/home');
+      if (mounted) {
+        // Close loading indicator
+        Navigator.pop(context);
+
+        // Show success message
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Registration successful! Please login.'),
+            backgroundColor: Colors.green,
+          ),
+        );
+
+        // Navigate back to login screen
+        Navigator.pop(context);
       }
     } catch (e) {
       if (mounted) {
+        // Close loading indicator if it's showing
+        Navigator.pop(context);
+
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(e.toString())),
+          SnackBar(
+            content: Text(e.toString()),
+            backgroundColor: Colors.red,
+          ),
         );
       }
     }
