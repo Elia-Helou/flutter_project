@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../database/database_helper.dart';
 import '../models/user.dart';
+import 'package:bcrypt/bcrypt.dart';
 
 class AuthService extends ChangeNotifier {
   final DatabaseHelper _dbHelper = DatabaseHelper();
@@ -13,11 +14,18 @@ class AuthService extends ChangeNotifier {
       }
 
       final dbPassword = userData['password'];
+      print('Stored Password Hash: $dbPassword');
+      print('Entered Password Hash: $password');
+      String hashedPassword = BCrypt.hashpw(password, BCrypt.gensalt());
+
+      print('Hashed Password: $hashedPassword');
       if (dbPassword == null) {
         throw Exception('Password in database is null');
       }
 
-      if (dbPassword.toString().trim() != password.trim()) {
+      final isPasswordCorrect = BCrypt.checkpw(password, dbPassword);
+      print(isPasswordCorrect);
+      if (!isPasswordCorrect) {
         throw Exception('Invalid password');
       }
 
