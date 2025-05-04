@@ -145,4 +145,27 @@ class DatabaseService {
       rethrow;
     }
   }
+
+  // Fetch unique categories with one image per category from recipes table
+  Future<List<Map<String, dynamic>>> fetchCategoriesWithImage() async {
+    try {
+      final conn = await connection;
+      // Fetch unique categories and one image_url per category
+      final result = await conn.execute('''
+        SELECT categories, MIN(image_url) AS image_url
+        FROM recipes
+        WHERE categories IS NOT NULL AND categories != ''
+        GROUP BY categories
+      ''');
+      final mapped = result.map((row) => row.toColumnMap()).toList();
+      print('Fetched categories:');
+      for (final row in mapped) {
+        print(row);
+      }
+      return mapped;
+    } catch (e) {
+      print('Error fetching categories: $e');
+      rethrow;
+    }
+  }
 }
