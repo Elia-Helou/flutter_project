@@ -118,4 +118,23 @@ class AuthService extends ChangeNotifier {
       rethrow;
     }
   }
+
+  Future<bool> verifyPassword(String email, String password) async {
+    try {
+      final userData = await _dbHelper.getUserByEmail(email);
+      if (userData == null) {
+        throw Exception('User not found');
+      }
+
+      final dbPassword = userData['password'];
+      if (dbPassword == null) {
+        throw Exception('Password in database is null');
+      }
+
+      return BCrypt.checkpw(password, dbPassword);
+    } catch (e) {
+      debugPrint('Verify password error: $e');
+      rethrow;
+    }
+  }
 } 

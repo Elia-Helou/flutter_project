@@ -47,6 +47,35 @@ class _EditAccountScreenState extends State<EditAccountScreen> {
       
       if (user != null) {
         try {
+          // If either email is changed or password is being updated, verify current password
+          if (_emailController.text.trim() != user.email || 
+              (_currentPasswordController.text.isNotEmpty && _newPasswordController.text.isNotEmpty)) {
+            
+            // Verify current password
+            if (_currentPasswordController.text.isEmpty) {
+              if (mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Please enter your current password to make changes')),
+                );
+              }
+              return;
+            }
+
+            final isPasswordCorrect = await authService.verifyPassword(
+              user.email,
+              _currentPasswordController.text,
+            );
+
+            if (!isPasswordCorrect) {
+              if (mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Current password is incorrect')),
+                );
+              }
+              return;
+            }
+          }
+
           // If email has changed, update it
           if (_emailController.text.trim() != user.email) {
             await authService.updateEmail(user.email, _emailController.text.trim());
