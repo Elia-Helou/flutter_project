@@ -164,4 +164,33 @@ class DatabaseHelper {
       rethrow;
     }
   }
+
+  Future<bool> updateUserEmail(String currentEmail, String newEmail) async {
+    try {
+      final conn = await connection;
+      
+      // Check if new email already exists
+      final checkResult = await conn.execute(
+        Sql.named('SELECT COUNT(*) FROM users WHERE email = @email'),
+        parameters: {'email': newEmail},
+      );
+
+      if (checkResult.isNotEmpty && (checkResult.first[0] as int) > 0) {
+        throw Exception('Email already in use');
+      }
+
+      await conn.execute(
+        Sql.named('UPDATE users SET email = @newEmail, updated_at = CURRENT_TIMESTAMP WHERE email = @currentEmail'),
+        parameters: {
+          'currentEmail': currentEmail,
+          'newEmail': newEmail,
+        },
+      );
+
+      return true;
+    } catch (e) {
+      debugPrint('Error updating email: $e');
+      rethrow;
+    }
+  }
 } 

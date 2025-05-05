@@ -108,4 +108,14 @@ class AuthService extends ChangeNotifier {
       rethrow;
     }
   }
+
+  Future<void> updateEmail(String currentEmail, String newEmail) async {
+    try {
+      await _dbHelper.updateUserEmail(currentEmail, newEmail);
+      notifyListeners();
+    } catch (e) {
+      debugPrint('Update email error: $e');
+      rethrow;
+    }
+  }
 } 

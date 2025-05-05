@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../providers/user_provider.dart';
 import '../core/constants/colors.dart';
 import 'edit_profile_screen.dart';
+import 'edit_account_screen.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({Key? key}) : super(key: key);
@@ -40,9 +41,14 @@ class ProfileScreen extends StatelessWidget {
         },
       ),
       _ProfileOption(
-        icon: Icons.star,
-        label: 'Renew Plans',
-        onTap: () {},
+        icon: Icons.person,
+        label: 'Edit Account',
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const EditAccountScreen()),
+          );
+        },
       ),
       _ProfileOption(
         icon: Icons.settings,
