@@ -108,7 +108,7 @@ class ProfileScreen extends StatelessWidget {
                         color: Colors.pink[100],
                         shape: BoxShape.circle,
                       ),
-                      child: const Icon(Icons.camera_alt, size: 20, color: Colors.white),
+                      child: ClipOval(child: profileImageWidget),
                     ),
                   ),
                 ],
@@ -192,4 +192,4 @@ class _ProfileOption extends StatelessWidget {
       ),
     );
   }
-} 
+}
