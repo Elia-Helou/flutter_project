@@ -32,7 +32,7 @@ class DatabaseHelper {
     required String dateOfBirth,
     required String height,
     required String weight,
-    required int phoneNumber,
+    required String phoneNumber,
     String? activityLevel,
     String? targetWeight,
   }) async {

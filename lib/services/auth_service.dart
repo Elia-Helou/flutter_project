@@ -39,7 +39,7 @@ class AuthService extends ChangeNotifier {
     required DateTime dateOfBirth,
     required double height,
     required double weight,
-    required int phoneNumber,
+    required String phoneNumber,
     String? activityLevel,
     double? targetWeight,
   }) async {

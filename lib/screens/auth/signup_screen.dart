@@ -90,7 +90,7 @@ class _SignupScreenState extends State<SignupScreen> {
         dateOfBirth: DateTime.parse(_dateOfBirth),
         height: double.parse(_heightController.text),
         weight: double.parse(_weightController.text),
-        phoneNumber: int.parse(_phoneNumberController.text),
+        phoneNumber: _phoneNumberController.text,
         activityLevel: _activityLevel,
         targetWeight: _goalWeightController.text.isNotEmpty
           ? double.parse(_goalWeightController.text)
