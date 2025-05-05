@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/user_provider.dart';
+import '../services/auth_service.dart';
 
 class EditProfileScreen extends StatefulWidget {
   const EditProfileScreen({Key? key}) : super(key: key);
@@ -32,20 +33,44 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     super.dispose();
   }
 
-  void _saveProfile() {
+  void _savePersonalInfo() async {
     if (_formKey.currentState?.validate() ?? false) {
       final userProvider = Provider.of<UserProvider>(context, listen: false);
+      final authService = Provider.of<AuthService>(context, listen: false);
       final user = userProvider.user;
+      
       if (user != null) {
-        final updatedUser = user.copyWith(
-          firstName: _firstNameController.text.trim(),
-          lastName: _lastNameController.text.trim(),
-          phoneNumber: _phoneController.text.trim(),
-        );
-        userProvider.setUser(updatedUser);
-        // TODO: Update in database as well
+        try {
+          // Update in database
+          await authService.updateProfile(
+            email: user.email,
+            firstName: _firstNameController.text.trim(),
+            lastName: _lastNameController.text.trim(),
+            phone_number: _phoneController.text.trim()
+          );
+
+          // Update UI
+          final updatedUser = user.copyWith(
+            firstName: _firstNameController.text.trim(),
+            lastName: _lastNameController.text.trim(),
+            phoneNumber: _phoneController.text.trim(),
+          );
+          userProvider.setUser(updatedUser);
+
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Profile updated successfully')),
+            );
+            Navigator.pop(context);
+          }
+        } catch (e) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('Failed to update profile: ${e.toString()}')),
+            );
+          }
+        }
       }
-      Navigator.pop(context);
     }
   }
 
@@ -140,7 +165,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 children: [
                   Expanded(
                     child: ElevatedButton(
-                      onPressed: _saveProfile,
+                      onPressed: _savePersonalInfo,
                       child: const Text('Save'),
                     ),
                   ),

@@ -31,7 +31,7 @@ class ProfileScreen extends StatelessWidget {
     final options = [
       _ProfileOption(
         icon: Icons.person,
-        label: 'Edit Profile',
+        label: 'Edit Personal Info',
         onTap: () {
           Navigator.push(
             context,

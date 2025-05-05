@@ -111,12 +111,7 @@ class DatabaseHelper {
     required String email,
     required String firstName,
     required String lastName,
-    required String gender,
-    required String dateOfBirth,
-    required String height,
-    required String weight,
-    String? activityLevel,
-    String? targetWeight,
+    required String phone_number
   }) async {
     try {
       final conn = await connection;
@@ -126,12 +121,7 @@ class DatabaseHelper {
         UPDATE users SET
           first_name = @firstName,
           last_name = @lastName,
-          gender = @gender,
-          date_of_birth = @dateOfBirth,
-          height = @height,
-          weight = @weight,
-          activity_level = @activityLevel,
-          target_weight = @targetWeight,
+          phone_number = @phone_number,
           updated_at = CURRENT_TIMESTAMP
         WHERE email = @email
         '''),
@@ -139,12 +129,7 @@ class DatabaseHelper {
           'email': email,
           'firstName': firstName,
           'lastName': lastName,
-          'gender': gender,
-          'dateOfBirth': dateOfBirth,
-          'height': height,
-          'weight': weight,
-          'activityLevel': activityLevel,
-          'targetWeight': targetWeight,
+          'phone_number': phone_number
         },
       );
 
