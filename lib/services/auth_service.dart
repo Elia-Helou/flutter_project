@@ -79,14 +79,18 @@ class AuthService extends ChangeNotifier {
     required String email,
     required String firstName,
     required String lastName,
-    required String phone_number
+    required String phone_number,
+    required String gender,
+    required String dateOfBirth,
   }) async {
     try {
       await _dbHelper.updateUserProfile(
         email: email,
         firstName: firstName,
         lastName: lastName,
-        phone_number: phone_number
+        phone_number: phone_number,
+        gender: gender,
+        dateOfBirth: dateOfBirth,
       );
       notifyListeners();
     } catch (e) {

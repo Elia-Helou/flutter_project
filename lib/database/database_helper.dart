@@ -111,7 +111,9 @@ class DatabaseHelper {
     required String email,
     required String firstName,
     required String lastName,
-    required String phone_number
+    required String phone_number,
+    required String gender,
+    required String dateOfBirth,
   }) async {
     try {
       final conn = await connection;
@@ -122,6 +124,8 @@ class DatabaseHelper {
           first_name = @firstName,
           last_name = @lastName,
           phone_number = @phone_number,
+          gender = @gender,
+          date_of_birth = @dateOfBirth,
           updated_at = CURRENT_TIMESTAMP
         WHERE email = @email
         '''),
@@ -129,7 +133,9 @@ class DatabaseHelper {
           'email': email,
           'firstName': firstName,
           'lastName': lastName,
-          'phone_number': phone_number
+          'phone_number': phone_number,
+          'gender': gender,
+          'dateOfBirth': dateOfBirth,
         },
       );
 

@@ -15,6 +15,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   late TextEditingController _firstNameController;
   late TextEditingController _lastNameController;
   late TextEditingController _phoneController;
+  String _selectedGender = 'Male';
+  DateTime _selectedDate = DateTime.now();
 
   @override
   void initState() {
@@ -23,6 +25,17 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     _firstNameController = TextEditingController(text: user?.firstName ?? '');
     _lastNameController = TextEditingController(text: user?.lastName ?? '');
     _phoneController = TextEditingController(text: user?.phoneNumber?.toString() ?? '');
+    _selectedGender = user?.gender ?? 'Male';
+    
+    // Convert the date string to DateTime
+    if (user?.dateOfBirth != null) {
+      try {
+        _selectedDate = DateTime.parse(user!.dateOfBirth);
+      } catch (e) {
+        _selectedDate = DateTime.now();
+        debugPrint('Error parsing date: $e');
+      }
+    }
   }
 
   @override
@@ -33,6 +46,20 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     super.dispose();
   }
 
+  Future<void> _selectDate(BuildContext context) async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: _selectedDate,
+      firstDate: DateTime(1900),
+      lastDate: DateTime.now(),
+    );
+    if (picked != null && picked != _selectedDate) {
+      setState(() {
+        _selectedDate = picked;
+      });
+    }
+  }
+
   void _savePersonalInfo() async {
     if (_formKey.currentState?.validate() ?? false) {
       final userProvider = Provider.of<UserProvider>(context, listen: false);
@@ -41,12 +68,17 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       
       if (user != null) {
         try {
+          // Format date as string for database
+          final dateString = _selectedDate.toIso8601String().split('T')[0];
+
           // Update in database
           await authService.updateProfile(
             email: user.email,
             firstName: _firstNameController.text.trim(),
             lastName: _lastNameController.text.trim(),
-            phone_number: _phoneController.text.trim()
+            phone_number: _phoneController.text.trim(),
+            gender: _selectedGender,
+            dateOfBirth: dateString
           );
 
           // Update UI
@@ -54,6 +86,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
             firstName: _firstNameController.text.trim(),
             lastName: _lastNameController.text.trim(),
             phoneNumber: _phoneController.text.trim(),
+            gender: _selectedGender,
+            dateOfBirth: dateString,
           );
           userProvider.setUser(updatedUser);
 
@@ -159,6 +193,47 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 ),
                 keyboardType: TextInputType.phone,
                 validator: (value) => value == null || value.isEmpty ? 'Enter phone number' : (int.tryParse(value) == null ? 'Phone number must be digits only' : null),
+              ),
+              const SizedBox(height: 18),
+              DropdownButtonFormField<String>(
+                value: _selectedGender,
+                decoration: const InputDecoration(
+                  labelText: 'Gender',
+                  border: OutlineInputBorder(),
+                ),
+                items: ['Male', 'Female', 'Other'].map((String gender) {
+                  return DropdownMenuItem(
+                    value: gender,
+                    child: Text(gender),
+                  );
+                }).toList(),
+                onChanged: (String? newValue) {
+                  if (newValue != null) {
+                    setState(() {
+                      _selectedGender = newValue;
+                    });
+                  }
+                },
+              ),
+              const SizedBox(height: 18),
+              InkWell(
+                onTap: () => _selectDate(context),
+                child: InputDecorator(
+                  decoration: const InputDecoration(
+                    labelText: 'Date of Birth',
+                    border: OutlineInputBorder(),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        '${_selectedDate.day}/${_selectedDate.month}/${_selectedDate.year}',
+                        style: Theme.of(context).textTheme.bodyMedium,
+                      ),
+                      const Icon(Icons.calendar_today),
+                    ],
+                  ),
+                ),
               ),
               const SizedBox(height: 32),
               Row(
