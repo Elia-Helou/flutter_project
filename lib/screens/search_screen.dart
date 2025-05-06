@@ -13,6 +13,8 @@ class SearchScreen extends StatefulWidget {
 class _SearchScreenState extends State<SearchScreen> with SingleTickerProviderStateMixin {
   late TabController _tabController;
   late Future<List<String>> _categoriesFuture;
+  final TextEditingController _categorySearchController = TextEditingController();
+  String _categorySearchQuery = '';
 
   @override
   void initState() {
@@ -21,15 +23,31 @@ class _SearchScreenState extends State<SearchScreen> with SingleTickerProviderSt
     _categoriesFuture = _fetchCategories();
   }
 
+  @override
+  void dispose() {
+    _tabController.dispose();
+    _categorySearchController.dispose();
+    super.dispose();
+  }
+
   Future<List<String>> _fetchCategories() async {
     final results = await DatabaseService.instance.fetchDistinctCategories();
     return results;
   }
 
-  @override
-  void dispose() {
-    _tabController.dispose();
-    super.dispose();
+  void _onCategorySearch() {
+    setState(() {
+      _categorySearchQuery = _categorySearchController.text.trim().toLowerCase();
+    });
+  }
+
+  List<String> _filterCategories(List<String> categories) {
+    if (_categorySearchQuery.isEmpty) {
+      return categories;
+    }
+    return categories.where(
+      (category) => category.toLowerCase().contains(_categorySearchQuery)
+    ).toList();
   }
 
   Widget _buildCategoryCard(String category) {
@@ -161,20 +179,44 @@ class _SearchScreenState extends State<SearchScreen> with SingleTickerProviderSt
           // Recipes Search Tab
           Column(
             children: [
+              // Search Bar for Categories
               Padding(
                 padding: const EdgeInsets.all(16.0),
-                child: TextField(
-                  decoration: InputDecoration(
-                    hintText: 'Search for recipes...',
-                    prefixIcon: const Icon(Icons.search),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(30),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        controller: _categorySearchController,
+                        decoration: InputDecoration(
+                          hintText: 'Search recipe categories...',
+                          prefixIcon: const Icon(Icons.search),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(30),
+                          ),
+                          filled: true,
+                          fillColor: Colors.grey[100],
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                        ),
+                        onSubmitted: (_) => _onCategorySearch(),
+                      ),
                     ),
-                    filled: true,
-                    fillColor: Colors.grey[100],
-                  ),
+                    const SizedBox(width: 8),
+                    ElevatedButton(
+                      onPressed: _onCategorySearch,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.splashBackground,
+                        shape: const CircleBorder(),
+                        padding: const EdgeInsets.all(16),
+                      ),
+                      child: const Icon(
+                        Icons.search,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ],
                 ),
               ),
+              // Categories List
               Expanded(
                 child: FutureBuilder<List<String>>(
                   future: _categoriesFuture,
@@ -189,13 +231,37 @@ class _SearchScreenState extends State<SearchScreen> with SingleTickerProviderSt
                       return const Center(child: Text('No categories found'));
                     }
 
-                    final categories = ['My Recipes', ...snapshot.data!];
-                    
+                    final allCategories = ['My Recipes', ...snapshot.data!];
+                    final filteredCategories = _filterCategories(allCategories);
+
+                    if (filteredCategories.isEmpty) {
+                      return Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.search_off,
+                              size: 64,
+                              color: Colors.grey[400],
+                            ),
+                            const SizedBox(height: 16),
+                            Text(
+                              'No categories found for "${_categorySearchController.text}"',
+                              style: TextStyle(
+                                color: Colors.grey[600],
+                                fontSize: 16,
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    }
+
                     return ListView.builder(
                       padding: const EdgeInsets.symmetric(horizontal: 16),
-                      itemCount: categories.length,
+                      itemCount: filteredCategories.length,
                       itemBuilder: (context, index) {
-                        return _buildCategoryCard(categories[index]);
+                        return _buildCategoryCard(filteredCategories[index]);
                       },
                     );
                   },
