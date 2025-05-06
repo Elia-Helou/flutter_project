@@ -225,7 +225,7 @@ class DatabaseService {
       final conn = await connection;
       final result = await conn.execute(
         Sql.named('''
-        SELECT name, image_url, total_calories
+        SELECT name, image_url, CAST(total_calories AS INTEGER) as total_calories
         FROM recipes
         WHERE categories = @category
         ORDER BY name
