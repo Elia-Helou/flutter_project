@@ -71,6 +71,7 @@ flutter:
     - assets/images/
     - assets/images/categories/
     - assets/images/users/
+    - assets/images/recipes/
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

@@ -218,4 +218,27 @@ class DatabaseService {
       rethrow;
     }
   }
+
+  // Fetch recipes by category
+  Future<List<Map<String, dynamic>>> fetchRecipesByCategory(String category) async {
+    try {
+      final conn = await connection;
+      final result = await conn.execute(
+        Sql.named('''
+        SELECT name, image_url, total_calories
+        FROM recipes
+        WHERE categories = @category
+        ORDER BY name
+        '''),
+        parameters: {
+          'category': category,
+        },
+      );
+      
+      return result.map((row) => row.toColumnMap()).toList();
+    } catch (e) {
+      print('Error fetching recipes by category: $e');
+      rethrow;
+    }
+  }
 }
