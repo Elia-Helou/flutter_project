@@ -246,4 +246,55 @@ class DatabaseService {
       rethrow;
     }
   }
+
+  // Fetch detailed recipe information by name
+  Future<Map<String, dynamic>?> fetchRecipeDetails(String recipeName) async {
+    try {
+      final conn = await connection;
+      
+      // Fetch recipe details
+      final recipeResult = await conn.execute(
+        Sql.named('''
+        SELECT *
+        FROM recipes
+        WHERE name = @name
+        LIMIT 1
+        '''),
+        parameters: {'name': recipeName},
+      );
+
+      if (recipeResult.isEmpty) {
+        return null;
+      }
+
+      final recipeData = recipeResult.first.toColumnMap();
+
+      // Fetch ingredients separately
+      final ingredientsResult = await conn.execute(
+        Sql.named('''
+        SELECT f.name as food_name, ri.amount, ri.unit
+        FROM recipe_ingredients ri
+        JOIN recipes r ON r.id = ri.recipe_id
+        JOIN foods f ON f.id = ri.food_id
+        WHERE r.name = @name
+        '''),
+        parameters: {'name': recipeName},
+      );
+
+      // Convert ingredients to List<Map>
+      final ingredients = ingredientsResult.map((row) => {
+        'food_name': row[0],
+        'amount': row[1],
+        'unit': row[2],
+      }).toList();
+      
+      // Add ingredients to recipe data
+      recipeData['ingredients'] = ingredients;
+      
+      return recipeData;
+    } catch (e) {
+      print('Error fetching recipe details: $e');
+      rethrow;
+    }
+  }
 }

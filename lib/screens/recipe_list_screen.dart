@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../services/database_service.dart';
 import '../core/constants/colors.dart';
+import './recipe_detail_screen.dart';
 
 class RecipeListScreen extends StatefulWidget {
   final String category;
@@ -52,112 +53,96 @@ class _RecipeListScreenState extends State<RecipeListScreen> {
         ? int.tryParse(recipe['total_calories'].toString()) ?? 0 
         : 0;
     
-    return Container(
-      margin: const EdgeInsets.only(bottom: 16),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(15),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 8,
-            offset: const Offset(0, 4),
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => RecipeDetailScreen(recipeName: name),
           ),
-        ],
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(15),
-        child: Stack(
-          children: [
-            // Recipe Image with error handling
-            Image.asset(
-              'assets/images/recipes/$imageUrl',
-              width: double.infinity,
-              height: 200,
-              fit: BoxFit.cover,
-              errorBuilder: (context, error, stackTrace) {
-                // Return a placeholder when image fails to load
-                return Container(
-                  width: double.infinity,
-                  height: 200,
-                  color: Colors.grey[300],
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        Icons.restaurant,
-                        size: 50,
-                        color: Colors.grey[600],
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'Image not available',
-                        style: TextStyle(
+        );
+      },
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 16),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(15),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.1),
+              blurRadius: 8,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(15),
+          child: Stack(
+            children: [
+              // Recipe Image with error handling
+              Image.asset(
+                'assets/images/recipes/$imageUrl',
+                width: double.infinity,
+                height: 200,
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) {
+                  // Return a placeholder when image fails to load
+                  return Container(
+                    width: double.infinity,
+                    height: 200,
+                    color: Colors.grey[300],
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.restaurant,
+                          size: 50,
                           color: Colors.grey[600],
-                          fontSize: 16,
                         ),
-                      ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'Image not available',
+                          style: TextStyle(
+                            color: Colors.grey[600],
+                            fontSize: 16,
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              ),
+              // Gradient Overlay
+              Container(
+                width: double.infinity,
+                height: 200,
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      Colors.transparent,
+                      Colors.black.withOpacity(0.7),
                     ],
                   ),
-                );
-              },
-            ),
-            // Gradient Overlay
-            Container(
-              width: double.infinity,
-              height: 200,
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [
-                    Colors.transparent,
-                    Colors.black.withOpacity(0.7),
-                  ],
                 ),
               ),
-            ),
-            // Recipe Info
-            Positioned(
-              bottom: 0,
-              left: 0,
-              right: 0,
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    // Recipe Name
-                    Expanded(
-                      child: Text(
-                        name,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                          shadows: [
-                            Shadow(
-                              offset: Offset(0, 2),
-                              blurRadius: 6,
-                              color: Colors.black54,
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                    // Calories
-                    Row(
-                      children: [
-                        const Icon(
-                          Icons.local_fire_department,
-                          color: Colors.white,
-                          size: 20,
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          '$calories Cal',
+              // Recipe Info
+              Positioned(
+                bottom: 0,
+                left: 0,
+                right: 0,
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      // Recipe Name
+                      Expanded(
+                        child: Text(
+                          name,
                           style: const TextStyle(
                             color: Colors.white,
-                            fontSize: 16,
+                            fontSize: 20,
                             fontWeight: FontWeight.bold,
                             shadows: [
                               Shadow(
@@ -168,13 +153,39 @@ class _RecipeListScreenState extends State<RecipeListScreen> {
                             ],
                           ),
                         ),
-                      ],
-                    ),
-                  ],
+                      ),
+                      // Calories
+                      Row(
+                        children: [
+                          const Icon(
+                            Icons.local_fire_department,
+                            color: Colors.white,
+                            size: 20,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            '$calories Cal',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              shadows: [
+                                Shadow(
+                                  offset: Offset(0, 2),
+                                  blurRadius: 6,
+                                  color: Colors.black54,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
