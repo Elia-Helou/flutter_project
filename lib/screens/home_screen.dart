@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../core/constants/colors.dart';
 import '../services/database_service.dart';
 import '../providers/user_provider.dart';
+import './favorites_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
@@ -33,12 +34,15 @@ class _HomeScreenState extends State<HomeScreen> {
       case 1:
         Navigator.pushNamed(context, '/search');
         break;
-      // case 2:
-      //   Navigator.pushNamed(context, '/add');
-      //   break;
-      // case 3:
-      //   Navigator.pushNamed(context, '/favorites');
-      //   break;
+      case 2:
+        // Navigator.pushNamed(context, '/add');
+        break;
+      case 3:
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const FavoritesScreen()),
+        );
+        break;
       case 4:
         Navigator.pushNamed(context, '/profile');
         break;
