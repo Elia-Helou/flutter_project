@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import '../services/database_service.dart';
 import '../core/constants/colors.dart';
+import '../providers/user_provider.dart';
+import 'package:provider/provider.dart';
 
 class RecipeDetailScreen extends StatefulWidget {
   final String recipeName;
@@ -18,11 +20,65 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
   late Future<Map<String, dynamic>?> _recipeFuture;
   bool _isMetric = false;
   bool _isFavorite = false;
+  bool _isLoadingFavorite = false;
 
   @override
   void initState() {
     super.initState();
-    _recipeFuture = DatabaseService.instance.fetchRecipeDetails(widget.recipeName);
+    _recipeFuture = _loadRecipeAndFavoriteStatus();
+  }
+
+  Future<Map<String, dynamic>?> _loadRecipeAndFavoriteStatus() async {
+    final recipe = await DatabaseService.instance.fetchRecipeDetails(widget.recipeName);
+    if (recipe != null) {
+      final user = Provider.of<UserProvider>(context, listen: false).user;
+      if (user != null) {
+        final isFavorite = await DatabaseService.instance.isRecipeFavorited(
+          user.id,
+          recipe['id'],
+        );
+        setState(() {
+          _isFavorite = isFavorite;
+        });
+      }
+    }
+    return recipe;
+  }
+
+  Future<void> _toggleFavorite(int recipeId) async {
+    if (_isLoadingFavorite) return;
+
+    setState(() {
+      _isLoadingFavorite = true;
+    });
+
+    try {
+      final user = Provider.of<UserProvider>(context, listen: false).user;
+      if (user == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Please log in to save favorites')),
+        );
+        return;
+      }
+
+      if (_isFavorite) {
+        await DatabaseService.instance.removeFromFavorites(user.id, recipeId);
+      } else {
+        await DatabaseService.instance.addToFavorites(user.id, recipeId);
+      }
+
+      setState(() {
+        _isFavorite = !_isFavorite;
+      });
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error updating favorite status: $e')),
+      );
+    } finally {
+      setState(() {
+        _isLoadingFavorite = false;
+      });
+    }
   }
 
   String _formatUnit(String unit, dynamic amount) {
@@ -105,17 +161,27 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
                   onPressed: () => Navigator.pop(context),
                 ),
                 actions: [
-                  IconButton(
-                    icon: Icon(
-                      _isFavorite ? Icons.favorite : Icons.favorite_border,
-                      color: Colors.white,
-                    ),
-                    onPressed: () {
-                      setState(() {
-                        _isFavorite = !_isFavorite;
-                      });
-                    },
-                  ),
+                  _isLoadingFavorite
+                      ? const Padding(
+                          padding: EdgeInsets.all(8.0),
+                          child: Center(
+                            child: SizedBox(
+                              width: 24,
+                              height: 24,
+                              child: CircularProgressIndicator(
+                                color: Colors.white,
+                                strokeWidth: 2,
+                              ),
+                            ),
+                          ),
+                        )
+                      : IconButton(
+                          icon: Icon(
+                            _isFavorite ? Icons.favorite : Icons.favorite_border,
+                            color: Colors.white,
+                          ),
+                          onPressed: () => _toggleFavorite(recipe['id']),
+                        ),
                 ],
               ),
 

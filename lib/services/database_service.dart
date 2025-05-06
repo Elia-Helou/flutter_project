@@ -247,12 +247,74 @@ class DatabaseService {
     }
   }
 
-  // Fetch detailed recipe information by name
+  // Check if a recipe is favorited by user
+  Future<bool> isRecipeFavorited(int userId, int recipeId) async {
+    try {
+      final conn = await connection;
+      final result = await conn.execute(
+        Sql.named('''
+        SELECT 1 FROM favorite_recipes
+        WHERE user_id = @user_id AND recipe_id = @recipe_id
+        '''),
+        parameters: {
+          'user_id': userId,
+          'recipe_id': recipeId,
+        },
+      );
+      return result.isNotEmpty;
+    } catch (e) {
+      print('Error checking favorite status: $e');
+      return false;
+    }
+  }
+
+  // Add recipe to favorites
+  Future<void> addToFavorites(int userId, int recipeId) async {
+    try {
+      final conn = await connection;
+      await conn.execute(
+        Sql.named('''
+        INSERT INTO favorite_recipes (user_id, recipe_id)
+        VALUES (@user_id, @recipe_id)
+        ON CONFLICT (user_id, recipe_id) DO NOTHING
+        '''),
+        parameters: {
+          'user_id': userId,
+          'recipe_id': recipeId,
+        },
+      );
+    } catch (e) {
+      print('Error adding to favorites: $e');
+      rethrow;
+    }
+  }
+
+  // Remove recipe from favorites
+  Future<void> removeFromFavorites(int userId, int recipeId) async {
+    try {
+      final conn = await connection;
+      await conn.execute(
+        Sql.named('''
+        DELETE FROM favorite_recipes
+        WHERE user_id = @user_id AND recipe_id = @recipe_id
+        '''),
+        parameters: {
+          'user_id': userId,
+          'recipe_id': recipeId,
+        },
+      );
+    } catch (e) {
+      print('Error removing from favorites: $e');
+      rethrow;
+    }
+  }
+
+  // Modify fetchRecipeDetails to include recipe ID
   Future<Map<String, dynamic>?> fetchRecipeDetails(String recipeName) async {
     try {
       final conn = await connection;
       
-      // Fetch recipe details
+      // Fetch recipe details including ID
       final recipeResult = await conn.execute(
         Sql.named('''
         SELECT *
