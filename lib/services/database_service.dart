@@ -200,4 +200,22 @@ class DatabaseService {
       rethrow;
     }
   }
+
+  // Fetch distinct categories from recipes table
+  Future<List<String>> fetchDistinctCategories() async {
+    try {
+      final conn = await connection;
+      final result = await conn.execute('''
+        SELECT DISTINCT categories
+        FROM recipes
+        WHERE categories IS NOT NULL AND categories != ''
+        ORDER BY categories
+      ''');
+      
+      return result.map((row) => row[0] as String).toList();
+    } catch (e) {
+      print('Error fetching distinct categories: $e');
+      rethrow;
+    }
+  }
 }
