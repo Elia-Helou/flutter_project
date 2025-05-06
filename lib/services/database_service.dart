@@ -359,4 +359,33 @@ class DatabaseService {
       rethrow;
     }
   }
+
+  // Fetch user's favorite recipes
+  Future<List<Map<String, dynamic>>> fetchFavoriteRecipes(int userId, {String searchQuery = ''}) async {
+    try {
+      final conn = await connection;
+      final result = await conn.execute(
+        Sql.named('''
+        SELECT r.name, r.image_url, r.total_calories
+        FROM recipes r
+        JOIN favorite_recipes fr ON r.id = fr.recipe_id
+        WHERE fr.user_id = @user_id
+        AND (
+          @search = ''
+          OR r.name ILIKE '%' || @search || '%'
+        )
+        ORDER BY r.name
+        '''),
+        parameters: {
+          'user_id': userId,
+          'search': searchQuery.trim(),
+        },
+      );
+      
+      return result.map((row) => row.toColumnMap()).toList();
+    } catch (e) {
+      print('Error fetching favorite recipes: $e');
+      rethrow;
+    }
+  }
 }
