@@ -75,8 +75,8 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
                   background: Stack(
                     fit: StackFit.expand,
                     children: [
-                      Image.network(
-                        recipe['image_url'] ?? '',
+                      Image.asset(
+                        'assets/images/recipes/${recipe['image_url']}',
                         fit: BoxFit.cover,
                         errorBuilder: (context, error, stackTrace) {
                           return Container(
@@ -160,29 +160,15 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
                       const SizedBox(height: 24),
 
                       // Ingredients Section
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          const Text(
-                            'Ingredients',
-                            style: TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          // Unit Toggle
-                          Switch(
-                            value: _isMetric,
-                            onChanged: (value) {
-                              setState(() {
-                                _isMetric = value;
-                              });
-                            },
-                            activeTrackColor: AppColors.primary.withOpacity(0.4),
-                            activeColor: AppColors.primary,
-                          ),
-                        ],
+                      // Ingredients Section
+                      const Text(
+                        'Ingredients',
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
+
                       const SizedBox(height: 8),
                       ListView.builder(
                         shrinkWrap: true,
