@@ -30,9 +30,9 @@ class _HomeScreenState extends State<HomeScreen> {
       case 0:
         // Already on Home, do nothing
         break;
-      // case 1:
-      //   Navigator.pushNamed(context, '/search');
-      //   break;
+      case 1:
+        Navigator.pushNamed(context, '/search');
+        break;
       // case 2:
       //   Navigator.pushNamed(context, '/add');
       //   break;

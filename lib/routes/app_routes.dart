@@ -5,7 +5,7 @@ import 'package:project/screens/auth/login_screen.dart';
 import 'package:project/screens/auth/signup_screen.dart';
 import 'package:project/screens/home_screen.dart';
 import 'package:project/screens/profile_screen.dart';
-// import 'package:project/screens/search_screen.dart';
+import 'package:project/screens/search_screen.dart';
 // import 'package:project/screens/add_screen.dart';
 // import 'package:project/screens/favorites_screen.dart';
 
@@ -26,7 +26,7 @@ class AppRoutes {
     login: (context) => const LoginScreen(),
     signup: (context) => const SignupScreen(),
     home: (context) => const HomeScreen(),
-    // search: (context) => const SearchScreen(),
+    search: (context) => const SearchScreen(),
     // add: (context) => const AddScreen(),
     // favorites: (context) => const FavoritesScreen(),
     profile: (context) => const ProfileScreen(),
