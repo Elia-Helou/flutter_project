@@ -220,7 +220,7 @@ class DatabaseService {
   }
 
   // Fetch recipes by category
-  Future<List<Map<String, dynamic>>> fetchRecipesByCategory(String category) async {
+  Future<List<Map<String, dynamic>>> fetchRecipesByCategory(String category, {String searchQuery = ''}) async {
     try {
       final conn = await connection;
       final result = await conn.execute(
@@ -228,10 +228,15 @@ class DatabaseService {
         SELECT name, image_url, CAST(total_calories AS INTEGER) as total_calories
         FROM recipes
         WHERE categories = @category
+        AND (
+          @search = ''
+          OR name ILIKE '%' || @search || '%'
+        )
         ORDER BY name
         '''),
         parameters: {
           'category': category,
+          'search': searchQuery.trim(),
         },
       );
       

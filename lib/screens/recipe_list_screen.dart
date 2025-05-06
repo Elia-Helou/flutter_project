@@ -16,6 +16,8 @@ class RecipeListScreen extends StatefulWidget {
 
 class _RecipeListScreenState extends State<RecipeListScreen> {
   late Future<List<Map<String, dynamic>>> _recipesFuture;
+  final TextEditingController _searchController = TextEditingController();
+  String _searchQuery = '';
 
   @override
   void initState() {
@@ -23,8 +25,24 @@ class _RecipeListScreenState extends State<RecipeListScreen> {
     _recipesFuture = _fetchRecipes();
   }
 
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  void _onSearch() {
+    setState(() {
+      _searchQuery = _searchController.text;
+      _recipesFuture = _fetchRecipes();
+    });
+  }
+
   Future<List<Map<String, dynamic>>> _fetchRecipes() async {
-    return DatabaseService.instance.fetchRecipesByCategory(widget.category);
+    return DatabaseService.instance.fetchRecipesByCategory(
+      widget.category,
+      searchQuery: _searchQuery,
+    );
   }
 
   Widget _buildRecipeCard(Map<String, dynamic> recipe) {
@@ -168,30 +186,94 @@ class _RecipeListScreenState extends State<RecipeListScreen> {
       appBar: AppBar(
         title: Text(widget.category),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: FutureBuilder<List<Map<String, dynamic>>>(
-          future: _recipesFuture,
-          builder: (context, snapshot) {
-            if (snapshot.connectionState == ConnectionState.waiting) {
-              return const Center(child: CircularProgressIndicator());
-            }
-            if (snapshot.hasError) {
-              return Center(child: Text('Error: ${snapshot.error}'));
-            }
-            if (!snapshot.hasData || snapshot.data!.isEmpty) {
-              return const Center(child: Text('No recipes found'));
-            }
+      body: Column(
+        children: [
+          // Search Bar
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: _searchController,
+                    decoration: InputDecoration(
+                      hintText: 'Search ${widget.category} recipes...',
+                      prefixIcon: const Icon(Icons.search),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(30),
+                      ),
+                      filled: true,
+                      fillColor: Colors.grey[100],
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                    ),
+                    onSubmitted: (_) => _onSearch(), // Trigger search on keyboard submit
+                  ),
+                ),
+                const SizedBox(width: 8),
+                // Search Button
+                ElevatedButton(
+                  onPressed: _onSearch,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.splashBackground,
+                    shape: const CircleBorder(),
+                    padding: const EdgeInsets.all(16),
+                  ),
+                  child: const Icon(
+                    Icons.search,
+                    color: Colors.white,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          // Recipe List
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              child: FutureBuilder<List<Map<String, dynamic>>>(
+                future: _recipesFuture,
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+                  if (snapshot.hasError) {
+                    return Center(child: Text('Error: ${snapshot.error}'));
+                  }
+                  if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                    return Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.search_off,
+                            size: 64,
+                            color: Colors.grey[400],
+                          ),
+                          const SizedBox(height: 16),
+                          Text(
+                            'No recipes found${_searchQuery.isNotEmpty ? ' for "$_searchQuery"' : ''}',
+                            style: TextStyle(
+                              color: Colors.grey[600],
+                              fontSize: 16,
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  }
 
-            final recipes = snapshot.data!;
-            return ListView.builder(
-              itemCount: recipes.length,
-              itemBuilder: (context, index) {
-                return _buildRecipeCard(recipes[index]);
-              },
-            );
-          },
-        ),
+                  final recipes = snapshot.data!;
+                  return ListView.builder(
+                    itemCount: recipes.length,
+                    itemBuilder: (context, index) {
+                      return _buildRecipeCard(recipes[index]);
+                    },
+                  );
+                },
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
