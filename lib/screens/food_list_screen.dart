@@ -132,10 +132,36 @@ class _FoodListScreenState extends State<FoodListScreen> {
                   itemCount: foods.length,
                   itemBuilder: (context, index) {
                     final food = foods[index];
-                    // Use the food's name for the image instead of category
-                    final foodImageUrl = 'assets/images/foods/${food['name'].toString().toLowerCase().replaceAll(' ', '_')}.jpg';
-                    final categoryImageUrl = 'assets/images/foods/${widget.category.toLowerCase()}.jpg';
-                    final defaultImageUrl = 'assets/images/foods/default_food.jpg';
+                    final foodName = food['name'].toString().toLowerCase();
+                    
+                    // Special cases mapping for known file names
+                    final specialCases = {
+                      'pizza dough': 'pizza_dough.jpeg',
+                      'mozzarella cheese': 'mozzarella_cheese.jpg',
+                      'tomato sauce': 'tomato_sauce.jpg',
+                      'olive oil': 'olive_oil.jpg',
+                      'beef patty': 'beef_patty.jpg',
+                      'burger bun': 'burger_bun.jpg',
+                      'bell pepper': 'bell_pepper.jpg',
+                      'garlic': 'garlic_cloves.jpg',
+                      'chicken breast': 'chicken_breast.jpg',
+                      'cheddar cheese': 'cheddar_cheese.jpg',
+                      'tomato': 'tomato_slice.jpg',
+                      'vanilla extract': 'vanilla_extract.jpg',
+                      'chocolate chips': 'chocolate_chips.jpg',
+                      'feta cheese': 'feta_cheese.jpg',
+                    };
+
+                    // Try to find the correct image path
+                    String imageUrl;
+                    if (specialCases.containsKey(foodName)) {
+                      imageUrl = 'assets/images/foods/${specialCases[foodName]}';
+                    } else {
+                      // Try standard naming pattern
+                      imageUrl = 'assets/images/foods/${foodName.replaceAll(' ', '_')}.jpg';
+                    }
+
+                    print('Loading image for $foodName: $imageUrl');
 
                     return Card(
                       margin: const EdgeInsets.only(bottom: 16),
@@ -150,37 +176,43 @@ class _FoodListScreenState extends State<FoodListScreen> {
                           ClipRRect(
                             borderRadius: const BorderRadius.vertical(top: Radius.circular(15)),
                             child: Image.asset(
-                              foodImageUrl,
+                              imageUrl,
                               width: double.infinity,
                               height: 200,
                               fit: BoxFit.cover,
                               errorBuilder: (context, error, stackTrace) {
-                                // If food image fails, try category image
+                                print('Error loading image: $imageUrl');
+                                // Try category image as fallback
+                                final categoryImage = 'assets/images/foods/${widget.category.toLowerCase()}.jpg';
                                 return Image.asset(
-                                  categoryImageUrl,
+                                  categoryImage,
                                   width: double.infinity,
                                   height: 200,
                                   fit: BoxFit.cover,
                                   errorBuilder: (context, error, stackTrace) {
-                                    // If category image fails, try default image
-                                    return Image.asset(
-                                      defaultImageUrl,
+                                    // If category image fails, show placeholder
+                                    return Container(
                                       width: double.infinity,
                                       height: 200,
-                                      fit: BoxFit.cover,
-                                      errorBuilder: (context, error, stackTrace) {
-                                        // If all images fail, show a placeholder
-                                        return Container(
-                                          width: double.infinity,
-                                          height: 200,
-                                          color: Colors.grey[300],
-                                          child: Icon(
+                                      color: Colors.grey[300],
+                                      child: Column(
+                                        mainAxisAlignment: MainAxisAlignment.center,
+                                        children: [
+                                          Icon(
                                             Icons.restaurant,
                                             size: 64,
                                             color: Colors.grey[600],
                                           ),
-                                        );
-                                      },
+                                          const SizedBox(height: 8),
+                                          Text(
+                                            'No image available',
+                                            style: TextStyle(
+                                              color: Colors.grey[600],
+                                              fontSize: 14,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
                                     );
                                   },
                                 );
