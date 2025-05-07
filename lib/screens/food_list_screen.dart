@@ -132,6 +132,8 @@ class _FoodListScreenState extends State<FoodListScreen> {
                   itemCount: foods.length,
                   itemBuilder: (context, index) {
                     final food = foods[index];
+                    // Use the food's name for the image instead of category
+                    final foodImageUrl = 'assets/images/foods/${food['name'].toString().toLowerCase().replaceAll(' ', '_')}.jpg';
                     final categoryImageUrl = 'assets/images/foods/${widget.category.toLowerCase()}.jpg';
                     final defaultImageUrl = 'assets/images/foods/default_food.jpg';
 
@@ -148,28 +150,37 @@ class _FoodListScreenState extends State<FoodListScreen> {
                           ClipRRect(
                             borderRadius: const BorderRadius.vertical(top: Radius.circular(15)),
                             child: Image.asset(
-                              categoryImageUrl,
+                              foodImageUrl,
                               width: double.infinity,
                               height: 200,
                               fit: BoxFit.cover,
                               errorBuilder: (context, error, stackTrace) {
-                                // If category image fails, try default image
+                                // If food image fails, try category image
                                 return Image.asset(
-                                  defaultImageUrl,
+                                  categoryImageUrl,
                                   width: double.infinity,
                                   height: 200,
                                   fit: BoxFit.cover,
                                   errorBuilder: (context, error, stackTrace) {
-                                    // If both images fail, show a placeholder
-                                    return Container(
+                                    // If category image fails, try default image
+                                    return Image.asset(
+                                      defaultImageUrl,
                                       width: double.infinity,
                                       height: 200,
-                                      color: Colors.grey[300],
-                                      child: Icon(
-                                        Icons.restaurant,
-                                        size: 64,
-                                        color: Colors.grey[600],
-                                      ),
+                                      fit: BoxFit.cover,
+                                      errorBuilder: (context, error, stackTrace) {
+                                        // If all images fail, show a placeholder
+                                        return Container(
+                                          width: double.infinity,
+                                          height: 200,
+                                          color: Colors.grey[300],
+                                          child: Icon(
+                                            Icons.restaurant,
+                                            size: 64,
+                                            color: Colors.grey[600],
+                                          ),
+                                        );
+                                      },
                                     );
                                   },
                                 );
