@@ -388,4 +388,62 @@ class DatabaseService {
       rethrow;
     }
   }
+
+  // Fetch distinct foods categories
+  Future<List<String>> fetchDistinctFoodCategories() async {
+    try {
+      final conn = await connection;
+      final result = await conn.execute('''
+        SELECT DISTINCT category
+        FROM foods
+        WHERE category IS NOT NULL AND category != ''
+        ORDER BY category
+      ''');
+      
+      return result.map((row) => row[0] as String).toList();
+    } catch (e) {
+      print('Error fetching distinct foods categories: $e');
+      rethrow;
+    }
+  }
+
+  // Fetch foods by category
+  Future<List<Map<String, dynamic>>> fetchFoodsByCategory(String category, {String searchQuery = ''}) async {
+    try {
+      final conn = await connection;
+      final result = await conn.execute(
+        Sql.named('''
+        SELECT 
+          name, 
+          description, 
+          category,
+          serving_size,
+          serving_unit,
+          CAST(calories AS INTEGER) as calories,
+          CAST(protein AS DECIMAL(5,1)) as protein,
+          CAST(carbohydrates AS DECIMAL(5,1)) as carbohydrates,
+          CAST(fats AS DECIMAL(5,1)) as fats,
+          CAST(fiber AS DECIMAL(5,1)) as fiber,
+          CAST(sugar AS DECIMAL(5,1)) as sugar,
+          CAST(sodium AS DECIMAL(5,1)) as sodium
+        FROM foods
+        WHERE category = @category
+        AND (
+          @search = ''
+          OR name ILIKE '%' || @search || '%'
+        )
+        ORDER BY name
+        '''),
+        parameters: {
+          'category': category,
+          'search': searchQuery.trim(),
+        },
+      );
+      
+      return result.map((row) => row.toColumnMap()).toList();
+    } catch (e) {
+      print('Error fetching foods by category: $e');
+      rethrow;
+    }
+  }
 }

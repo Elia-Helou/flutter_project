@@ -86,7 +86,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
                 const SizedBox(height: 4),
                 const Text(
-                  'Find, track and eat heathy food.',
+                  'Find, track and eat heathy foods.',
                   style: TextStyle(
                     fontSize: 16,
                     color: AppColors.textSecondary,
@@ -112,7 +112,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           children: [
                             const Text('ARTICLE', style: TextStyle(fontSize: 12, color: Colors.red)),
                             const SizedBox(height: 4),
-                            const Text('The pros and cons of fast food.', style: TextStyle(fontWeight: FontWeight.bold)),
+                            const Text('The pros and cons of fast foods.', style: TextStyle(fontWeight: FontWeight.bold)),
                             const SizedBox(height: 8),
                             ElevatedButton(
                               onPressed: () {},
