@@ -257,28 +257,15 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                           ),
                         ),
                       ),
-                      Row(
-                        children: [
-                          const Icon(
-                            Icons.local_fire_department,
-                            color: Colors.white,
-                            size: 20,
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            '$calories Cal',
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                              shadows: [
-                                Shadow(
-                                  offset: Offset(0, 2),
-                                  blurRadius: 6,
-                                  color: Colors.black54,
-                                ),
-                              ],
-                            ),
+                      const Icon(
+                        Icons.favorite,
+                        color: Colors.white,
+                        size: 24,
+                        shadows: [
+                          Shadow(
+                            offset: Offset(0, 2),
+                            blurRadius: 6,
+                            color: Colors.black54,
                           ),
                         ],
                       ),
