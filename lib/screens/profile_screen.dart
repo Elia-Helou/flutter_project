@@ -5,6 +5,7 @@ import '../core/constants/colors.dart';
 import 'edit_profile_screen.dart';
 import 'edit_account_screen.dart';
 import 'terms_privacy_screen.dart';
+import 'edit_fitness_goals_screen.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({Key? key}) : super(key: key);
@@ -54,7 +55,12 @@ class ProfileScreen extends StatelessWidget {
       _ProfileOption(
         icon: Icons.fitness_center,
         label: 'Edit Fitness goal',
-        onTap: () {},
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const EditFitnessGoalsScreen()),
+          );
+        },
       ),
       _ProfileOption(
         icon: Icons.description,

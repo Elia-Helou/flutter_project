@@ -446,4 +446,39 @@ class DatabaseService {
       rethrow;
     }
   }
+
+  // Update fitness goals
+  Future<void> updateFitnessGoals({
+    required String email,
+    required String height,
+    required String weight,
+    required String activityLevel,
+    String? targetWeight,
+  }) async {
+    try {
+      final conn = await connection;
+      await conn.execute(
+        Sql.named('''
+        UPDATE users
+        SET 
+          height = @height,
+          weight = @weight,
+          activity_level = @activityLevel,
+          target_weight = @targetWeight,
+          updated_at = CURRENT_TIMESTAMP
+        WHERE email = @email
+        '''),
+        parameters: {
+          'email': email,
+          'height': height,
+          'weight': weight,
+          'activityLevel': activityLevel,
+          'targetWeight': targetWeight,
+        },
+      );
+    } catch (e) {
+      print('Error updating fitness goals: $e');
+      rethrow;
+    }
+  }
 }
