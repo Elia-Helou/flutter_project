@@ -5,6 +5,8 @@ import 'package:project/screens/auth/login_screen.dart';
 import 'package:project/screens/auth/signup_screen.dart';
 import 'package:project/screens/home_screen.dart';
 import 'package:project/screens/profile_screen.dart';
+import 'package:project/screens/scan_food_screen.dart';
+// import 'package:project/screens/search_screen.dart';
 import 'package:project/screens/search_screen.dart';
 // import 'package:project/screens/add_screen.dart';
 // import 'package:project/screens/favorites_screen.dart';
@@ -19,6 +21,7 @@ class AppRoutes {
   static const String add = '/add';
   static const String favorites = '/favorites';
   static const String profile = '/profile';
+  static const String scanFood = '/scanFood';
 
   static Map<String, dynamic> routes = {
     splash: (context) => const SplashScreen(),
@@ -30,5 +33,6 @@ class AppRoutes {
     // add: (context) => const AddScreen(),
     // favorites: (context) => const FavoritesScreen(),
     profile: (context) => const ProfileScreen(),
+    scanFood: (context) => const ScanFoodScreen(),
   };
 }
