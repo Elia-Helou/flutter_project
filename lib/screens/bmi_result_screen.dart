@@ -28,7 +28,7 @@ class BMIResultScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF232323),
+      backgroundColor: Colors.white,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -50,23 +50,25 @@ class BMIResultScreen extends StatelessWidget {
           children: [
             const SizedBox(height: 16),
             // Gauge
-            SizedBox(
-              height: 220,
-              child: CustomPaint(
-                painter: _BMIGaugePainter(bmi: bmi),
-                child: Center(),
+            Center(
+              child: SizedBox(
+                width: 300,
+                height: 220,
+                child: CustomPaint(
+                  painter: _BMIGaugePainter(bmi: bmi),
+                ),
               ),
             ),
             const SizedBox(height: 16),
             const Text(
               'Your BMI',
-              style: TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold),
+              style: TextStyle(color: Colors.black, fontSize: 22, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
             Text(
               bmi.toStringAsFixed(1),
               style: const TextStyle(
-                color: Colors.white,
+                color: Colors.black,
                 fontSize: 56,
                 fontWeight: FontWeight.bold,
               ),
@@ -75,7 +77,7 @@ class BMIResultScreen extends StatelessWidget {
             Text(
               getBMICategory(),
               style: const TextStyle(
-                color: Colors.white,
+                color: Colors.black,
                 fontSize: 22,
                 fontWeight: FontWeight.bold,
               ),
@@ -83,7 +85,7 @@ class BMIResultScreen extends StatelessWidget {
             const SizedBox(height: 24),
             Text(
               getBMIMessage(),
-              style: const TextStyle(color: Colors.white, fontSize: 16),
+              style: const TextStyle(color: Colors.black, fontSize: 16),
               textAlign: TextAlign.center,
             ),
             const Spacer(),
@@ -123,8 +125,8 @@ class _BMIGaugePainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    final center = Offset(size.width / 2, size.height * 0.9);
-    final radius = size.width * 0.8 / 2;
+    final center = Offset(size.width / 2, size.height);
+    final radius = size.width * 0.9 / 2;
     final startAngle = math.pi;
     final sweepAngle = math.pi;
     final ranges = [
@@ -138,8 +140,8 @@ class _BMIGaugePainter extends CustomPainter {
     // Draw colored arcs
     double lastEnd = startAngle;
     for (var range in ranges) {
-      final rangeStart = (range[0] as double);
-      final rangeEnd = (range[1] as double);
+      final rangeStart = (range[0] as num).toDouble();
+      final rangeEnd = (range[1] as num).toDouble();
       final color = range[2] as Color;
       final rangeSweep = sweepAngle * (rangeEnd - rangeStart) / (maxBMI - minBMI);
       final paint = Paint()
@@ -158,7 +160,7 @@ class _BMIGaugePainter extends CustomPainter {
     }
     // Draw ticks and labels
     final tickPaint = Paint()
-      ..color = Colors.white
+      ..color = Colors.black
       ..strokeWidth = 2;
     for (double v = minBMI; v <= maxBMI; v += 5) {
       final angle = startAngle + sweepAngle * (v - minBMI) / (maxBMI - minBMI);
@@ -174,7 +176,7 @@ class _BMIGaugePainter extends CustomPainter {
       final textPainter = TextPainter(
         text: TextSpan(
           text: v.toInt().toString(),
-          style: const TextStyle(color: Colors.white, fontSize: 14),
+          style: const TextStyle(color: Colors.black, fontSize: 14),
         ),
         textDirection: TextDirection.ltr,
       )..layout();
@@ -187,7 +189,7 @@ class _BMIGaugePainter extends CustomPainter {
     // Draw pointer
     final pointerAngle = startAngle + sweepAngle * ((bmi - minBMI) / (maxBMI - minBMI)).clamp(0, 1);
     final pointerPaint = Paint()
-      ..color = Colors.grey[300]!
+      ..color = Colors.grey[800]!
       ..strokeWidth = 8
       ..strokeCap = StrokeCap.round;
     final pointerEnd = Offset(
@@ -196,7 +198,7 @@ class _BMIGaugePainter extends CustomPainter {
     );
     canvas.drawLine(center, pointerEnd, pointerPaint);
     // Draw pointer knob
-    final knobPaint = Paint()..color = Colors.white;
+    final knobPaint = Paint()..color = Colors.black;
     canvas.drawCircle(center, 10, knobPaint);
   }
 
