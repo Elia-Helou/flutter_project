@@ -93,6 +93,41 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ),
                 const SizedBox(height: 24),
+                // Quick Actions Row
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    _QuickActionCard(
+                      icon: Icons.monitor_weight,
+                      label: 'BMI calculator',
+                      onTap: () {
+                        Navigator.pushNamed(context, '/bmi');
+                      },
+                    ),
+                    _QuickActionCard(
+                      icon: Icons.lightbulb,
+                      label: 'Tips',
+                      onTap: () {
+                        Navigator.pushNamed(context, '/tips');
+                      },
+                    ),
+                    _QuickActionCard(
+                      icon: Icons.shopping_cart,
+                      label: 'Shopping list',
+                      onTap: () {
+                        Navigator.pushNamed(context, '/shopping');
+                      },
+                    ),
+                    _QuickActionCard(
+                      icon: Icons.show_chart,
+                      label: 'Progress',
+                      onTap: () {
+                        Navigator.pushNamed(context, '/progress');
+                      },
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 24),
                 // Article Card (static demo)
                 Container(
                   width: double.infinity,
@@ -292,6 +327,59 @@ class _HomeScreenState extends State<HomeScreen> {
             label: 'Profile',
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _QuickActionCard extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
+
+  const _QuickActionCard({
+    Key? key,
+    required this.icon,
+    required this.label,
+    required this.onTap,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Expanded(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 4.0),
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(16),
+          child: Container(
+            height: 100,
+            decoration: BoxDecoration(
+              color: AppColors.splashBackground, // Use app's green color
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                CircleAvatar(
+                  backgroundColor: Colors.white.withOpacity(0.2), // Slightly lighter for icon background
+                  radius: 22,
+                  child: Icon(icon, size: 28, color: Colors.white),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  label,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 12,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }
