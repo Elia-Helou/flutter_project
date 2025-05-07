@@ -4,6 +4,7 @@ import '../core/constants/colors.dart';
 import '../services/database_service.dart';
 import '../providers/user_provider.dart';
 import './favorites_screen.dart';
+import 'bmi_calculator_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
