@@ -364,7 +364,7 @@ class _QuickActionCard extends StatelessWidget {
                 CircleAvatar(
                   backgroundColor: Colors.white.withOpacity(0.2), // Slightly lighter for icon background
                   radius: 22,
-                  child: Icon(icon, size: 28, color: Colors.white),
+                  child: Icon(icon, size: 36, color: Colors.white),
                 ),
                 const SizedBox(height: 8),
                 Text(
