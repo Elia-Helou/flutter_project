@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../core/constants/colors.dart';
+import 'bmi_result_screen.dart';
 
 class BMICalculatorScreen extends StatefulWidget {
   const BMICalculatorScreen({Key? key}) : super(key: key);
@@ -104,7 +105,18 @@ class _BMICalculatorScreenState extends State<BMICalculatorScreen> {
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
-                onPressed: () {},
+                onPressed: () {
+                  final double weight = double.tryParse(weightController.text) ?? 0;
+                  final double heightCm = double.tryParse(heightController.text) ?? 0;
+                  final double heightM = heightCm / 100;
+                  final double bmi = (heightM > 0) ? weight / (heightM * heightM) : 0;
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => BMIResultScreen(bmi: bmi),
+                    ),
+                  );
+                },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.splashBackground,
                   padding: const EdgeInsets.symmetric(vertical: 18),
