@@ -42,7 +42,7 @@ class ProfileScreen extends StatelessWidget {
         },
       ),
       _ProfileOption(
-        icon: Icons.person,
+        icon: Icons.manage_accounts,
         label: 'Edit Account',
         onTap: () {
           Navigator.push(
@@ -52,8 +52,8 @@ class ProfileScreen extends StatelessWidget {
         },
       ),
       _ProfileOption(
-        icon: Icons.settings,
-        label: 'Settings',
+        icon: Icons.fitness_center,
+        label: 'Edit Fitness goal',
         onTap: () {},
       ),
       _ProfileOption(
