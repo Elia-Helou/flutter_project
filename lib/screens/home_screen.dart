@@ -5,6 +5,7 @@ import '../services/database_service.dart';
 import '../providers/user_provider.dart';
 import './favorites_screen.dart';
 import 'bmi_calculator_screen.dart';
+import 'chatbot_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
@@ -76,6 +77,20 @@ class _HomeScreenState extends State<HomeScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                // Add the AI Coach button at the top
+                Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: ElevatedButton.icon(
+                    icon: Icon(Icons.chat_bubble_outline),
+                    label: Text('Ask AI Coach'),
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => ChatbotScreen()),
+                      );
+                    },
+                  ),
+                ),
                 // Greeting
                 Text(
                   'Hello $userName,',
