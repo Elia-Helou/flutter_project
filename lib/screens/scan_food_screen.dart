@@ -175,6 +175,7 @@ class _ScanFoodScreenState extends State<ScanFoodScreen> {
                               ],
                             ),
             ),
+            // Bottom bar
             Container(
               height: 100,
               decoration: BoxDecoration(
@@ -194,10 +195,12 @@ class _ScanFoodScreenState extends State<ScanFoodScreen> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
+                  // Gallery icon
                   IconButton(
                     icon: Icon(Icons.photo_library, size: 32, color: AppColors.textSecondary),
                     onPressed: _pickFromGallery,
                   ),
+                  // Capture button
                   GestureDetector(
                     onTap: _takePhoto,
                     child: Container(
@@ -219,6 +222,7 @@ class _ScanFoodScreenState extends State<ScanFoodScreen> {
                       ),
                     ),
                   ),
+                  // Swap camera icon
                   IconButton(
                     icon: Icon(Icons.cameraswitch, size: 32, color: AppColors.textSecondary),
                     onPressed: () {},
