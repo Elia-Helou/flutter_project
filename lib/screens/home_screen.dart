@@ -91,6 +91,16 @@ class _HomeScreenState extends State<HomeScreen> {
                     },
                   ),
                 ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                  child: ElevatedButton.icon(
+                    icon: Icon(Icons.restaurant_menu),
+                    label: Text("Track Today's Food"),
+                    onPressed: () {
+                      Navigator.pushNamed(context, '/diary');
+                    },
+                  ),
+                ),
                 // Greeting
                 Text(
                   'Hello $userName,',

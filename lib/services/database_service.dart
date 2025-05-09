@@ -519,4 +519,85 @@ class DatabaseService {
       rethrow;
     }
   }
+
+  // Food Diary Methods
+  Future<void> addFoodDiaryEntry({
+    required int userId,
+    required DateTime date,
+    required String mealType,
+    int? foodId,
+    int? recipeId,
+    required double quantity,
+    required double calories,
+    required double fats,
+    required double protein,
+    required double carbs,
+  }) async {
+    final conn = await connection;
+    await conn.execute(
+      Sql.named('''
+        INSERT INTO food_diary_entries (
+          user_id, date, meal_type, food_id, recipe_id, quantity, calories, fats, protein, carbs
+        ) VALUES (
+          @userId, @date, @mealType, @foodId, @recipeId, @quantity, @calories, @fats, @protein, @carbs
+        )
+      '''),
+      parameters: {
+        'userId': userId,
+        'date': date.toIso8601String().substring(0, 10),
+        'mealType': mealType,
+        'foodId': foodId,
+        'recipeId': recipeId,
+        'quantity': quantity,
+        'calories': calories,
+        'fats': fats,
+        'protein': protein,
+        'carbs': carbs,
+      },
+    );
+  }
+
+  Future<void> deleteFoodDiaryEntry(int entryId) async {
+    final conn = await connection;
+    await conn.execute(
+      Sql.named('DELETE FROM food_diary_entries WHERE id = @id'),
+      parameters: {'id': entryId},
+    );
+  }
+
+  Future<List<Map<String, dynamic>>> fetchDiaryEntriesForDate(int userId, DateTime date) async {
+    final conn = await connection;
+    final result = await conn.execute(
+      Sql.named('''
+        SELECT * FROM food_diary_entries
+        WHERE user_id = @userId AND date = @date
+        ORDER BY meal_type, created_at
+      '''),
+      parameters: {
+        'userId': userId,
+        'date': date.toIso8601String().substring(0, 10),
+      },
+    );
+    return result.map((row) => row.toColumnMap()).toList();
+  }
+
+  Future<Map<String, dynamic>> fetchDiaryTotalsForDate(int userId, DateTime date) async {
+    final conn = await connection;
+    final result = await conn.execute(
+      Sql.named('''
+        SELECT 
+          COALESCE(SUM(calories),0) AS calories,
+          COALESCE(SUM(fats),0) AS fats,
+          COALESCE(SUM(protein),0) AS protein,
+          COALESCE(SUM(carbs),0) AS carbs
+        FROM food_diary_entries
+        WHERE user_id = @userId AND date = @date
+      '''),
+      parameters: {
+        'userId': userId,
+        'date': date.toIso8601String().substring(0, 10),
+      },
+    );
+    return result.isNotEmpty ? result.first.toColumnMap() : {'calories': 0, 'fats': 0, 'protein': 0, 'carbs': 0};
+  }
 }
