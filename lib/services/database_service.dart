@@ -225,7 +225,7 @@ class DatabaseService {
       final conn = await connection;
       final result = await conn.execute(
         Sql.named('''
-        SELECT name, image_url, CAST(total_calories AS INTEGER) as total_calories
+        SELECT id, name, image_url, CAST(total_calories AS INTEGER) as total_calories, CAST(total_protein AS DECIMAL(5,1)) as total_protein, CAST(total_fats AS DECIMAL(5,1)) as total_fats, CAST(total_carbohydrates AS DECIMAL(5,1)) as total_carbohydrates
         FROM recipes
         WHERE categories = @category
         AND (
@@ -414,6 +414,7 @@ class DatabaseService {
       final result = await conn.execute(
         Sql.named('''
         SELECT 
+          id,
           name, 
           description, 
           category,
@@ -425,7 +426,8 @@ class DatabaseService {
           CAST(fats AS DECIMAL(5,1)) as fats,
           CAST(fiber AS DECIMAL(5,1)) as fiber,
           CAST(sugar AS DECIMAL(5,1)) as sugar,
-          CAST(sodium AS DECIMAL(5,1)) as sodium
+          CAST(sodium AS DECIMAL(5,1)) as sodium,
+          image_url
         FROM foods
         WHERE category = @category
         AND (

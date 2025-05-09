@@ -143,7 +143,7 @@ class _DiaryScreenState extends State<DiaryScreen> {
             leading: const Icon(Icons.add),
             title: const Text('Add food or recipe'),
             onTap: () {
-              // TODO: Show add food/recipe modal
+              _showAddEntryModal(meal);
             },
           ),
         ],
@@ -158,6 +158,20 @@ class _DiaryScreenState extends State<DiaryScreen> {
       return 'Recipe #${entry['recipe_id']}'; // You can fetch recipe name if needed
     }
     return '?';
+  }
+
+  void _showAddEntryModal(String meal) async {
+    await showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      builder: (context) => AddDiaryEntryModal(
+        meal: meal,
+        onEntryAdded: () async {
+          Navigator.of(context).pop();
+          await _loadDiaryData();
+        },
+      ),
+    );
   }
 
   @override
@@ -182,6 +196,303 @@ class _DiaryScreenState extends State<DiaryScreen> {
             ],
           );
         },
+      ),
+    );
+  }
+}
+
+class AddDiaryEntryModal extends StatefulWidget {
+  final String meal;
+  final VoidCallback onEntryAdded;
+  const AddDiaryEntryModal({required this.meal, required this.onEntryAdded, Key? key}) : super(key: key);
+
+  @override
+  State<AddDiaryEntryModal> createState() => _AddDiaryEntryModalState();
+}
+
+class _AddDiaryEntryModalState extends State<AddDiaryEntryModal> {
+  String _type = 'Food';
+  String _search = '';
+  String _selectedCategory = '';
+  List<String> _categories = [];
+  List<Map<String, dynamic>> _items = [];
+  bool _loading = false;
+  final TextEditingController _searchController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchCategoriesAndItems();
+  }
+
+  Future<void> _fetchCategoriesAndItems() async {
+    setState(() { _loading = true; });
+    List<String> categories = [];
+    if (_type == 'Food') {
+      categories = await DatabaseService.instance.fetchDistinctFoodCategories();
+    } else {
+      categories = await DatabaseService.instance.fetchDistinctCategories();
+    }
+    setState(() {
+      _categories = categories;
+      _selectedCategory = categories.isNotEmpty ? categories[0] : '';
+    });
+    await _fetchItems();
+  }
+
+  Future<void> _fetchItems() async {
+    setState(() { _loading = true; });
+    List<Map<String, dynamic>> items = [];
+    if (_type == 'Food') {
+      if (_selectedCategory.isNotEmpty) {
+        items = await DatabaseService.instance.fetchFoodsByCategory(_selectedCategory, searchQuery: _search);
+      }
+    } else {
+      if (_selectedCategory.isNotEmpty) {
+        items = await DatabaseService.instance.fetchRecipesByCategory(_selectedCategory, searchQuery: _search);
+      }
+    }
+    setState(() {
+      _items = items;
+      _loading = false;
+    });
+  }
+
+  void _onTypeChanged(String type) async {
+    setState(() {
+      _type = type;
+      _search = '';
+      _searchController.clear();
+      _categories = [];
+      _selectedCategory = '';
+      _items = [];
+    });
+    await _fetchCategoriesAndItems();
+  }
+
+  void _onCategorySelected(String category) async {
+    setState(() {
+      _selectedCategory = category;
+    });
+    await _fetchItems();
+  }
+
+  void _onSearchChanged(String value) async {
+    setState(() {
+      _search = value;
+    });
+    await _fetchItems();
+  }
+
+  void _onAddPressed(Map<String, dynamic> item) async {
+    final quantityController = TextEditingController(text: '1');
+    final result = await showDialog<double>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Quantity (servings)'),
+        content: TextField(
+          controller: quantityController,
+          keyboardType: TextInputType.numberWithOptions(decimal: true),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              final q = double.tryParse(quantityController.text) ?? 1.0;
+              Navigator.of(context).pop(q);
+            },
+            child: const Text('Add'),
+          ),
+        ],
+      ),
+    );
+    if (result != null) {
+      await _addEntry(item, result);
+    }
+  }
+
+  Future<void> _addEntry(Map<String, dynamic> item, double quantity) async {
+    final user = Provider.of<UserProvider>(context, listen: false).user;
+    if (user == null) return;
+    final now = DateTime.now();
+    try {
+      if (_type == 'Food' && item['id'] != null) {
+        await DatabaseService.instance.addFoodDiaryEntry(
+          userId: user.id,
+          date: now,
+          mealType: widget.meal,
+          foodId: item['id'],
+          recipeId: null,
+          quantity: quantity,
+          calories: (num.tryParse(item['calories'].toString()) ?? 0) * quantity,
+          fats: (num.tryParse(item['fats'].toString()) ?? 0) * quantity,
+          protein: (num.tryParse(item['protein'].toString()) ?? 0) * quantity,
+          carbs: (num.tryParse(item['carbohydrates'].toString()) ?? 0) * quantity,
+        );
+      } else if (_type == 'Recipe' && item['id'] != null) {
+        await DatabaseService.instance.addFoodDiaryEntry(
+          userId: user.id,
+          date: now,
+          mealType: widget.meal,
+          foodId: null,
+          recipeId: item['id'],
+          quantity: quantity,
+          calories: (num.tryParse(item['total_calories'].toString()) ?? 0) * quantity,
+          fats: (num.tryParse(item['total_fats'].toString()) ?? 0) * quantity,
+          protein: (num.tryParse(item['total_protein'].toString()) ?? 0) * quantity,
+          carbs: (num.tryParse(item['total_carbohydrates'].toString()) ?? 0) * quantity,
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Please select a valid food or recipe.')),
+        );
+        return;
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Added successfully!'), backgroundColor: Colors.green),
+      );
+      widget.onEntryAdded();
+    } catch (e) {
+      print('Error adding diary entry: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error adding entry: $e'), backgroundColor: Colors.red),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+      child: SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const SizedBox(height: 8),
+            // Tabs with icons
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                GestureDetector(
+                  onTap: () => _onTypeChanged('Food'),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: _type == 'Food' ? Colors.grey[300] : Colors.transparent,
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.emoji_food_beverage, size: 32),
+                        const SizedBox(width: 8),
+                        const Text('Foods'),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 16),
+                GestureDetector(
+                  onTap: () => _onTypeChanged('Recipe'),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: _type == 'Recipe' ? Colors.grey[300] : Colors.transparent,
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.menu_book, size: 32),
+                        const SizedBox(width: 8),
+                        const Text('Recipes'),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            // Search bar
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              child: TextField(
+                controller: _searchController,
+                decoration: InputDecoration(
+                  hintText: 'Search',
+                  prefixIcon: const Icon(Icons.search),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  filled: true,
+                  fillColor: Colors.grey[200],
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 0),
+                ),
+                onChanged: _onSearchChanged,
+              ),
+            ),
+            const SizedBox(height: 8),
+            // Category chips
+            if (_categories.isNotEmpty)
+              SizedBox(
+                height: 36,
+                child: ListView.separated(
+                  scrollDirection: Axis.horizontal,
+                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                  itemCount: _categories.length,
+                  separatorBuilder: (_, __) => const SizedBox(width: 8),
+                  itemBuilder: (context, i) {
+                    final cat = _categories[i];
+                    return ChoiceChip(
+                      label: Text(cat),
+                      selected: _selectedCategory == cat,
+                      onSelected: (_) => _onCategorySelected(cat),
+                    );
+                  },
+                ),
+              ),
+            const SizedBox(height: 8),
+            // List of foods/recipes
+            if (_loading)
+              const Padding(
+                padding: EdgeInsets.all(32.0),
+                child: CircularProgressIndicator(),
+              )
+            else if (_items.isEmpty)
+              const Padding(
+                padding: EdgeInsets.all(32.0),
+                child: Text('No items found.'),
+              )
+            else
+              ListView.separated(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: _items.length,
+                separatorBuilder: (_, __) => const SizedBox(height: 8),
+                itemBuilder: (context, i) {
+                  final item = _items[i];
+                  final name = item['name'] ?? '';
+                  final cal = _type == 'Food' ? item['calories'] : item['total_calories'];
+                  final img = item['image_url'] ?? '';
+                  return Card(
+                    child: ListTile(
+                      leading: img != ''
+                          ? Image.network(img, width: 56, height: 56, fit: BoxFit.cover, errorBuilder: (c, e, s) => const Icon(Icons.fastfood))
+                          : const Icon(Icons.fastfood, size: 40),
+                      title: Text(name, style: const TextStyle(fontWeight: FontWeight.bold)),
+                      subtitle: Text('$cal Cal'),
+                      trailing: IconButton(
+                        icon: const Icon(Icons.add, size: 28),
+                        onPressed: () => _onAddPressed(item),
+                      ),
+                    ),
+                  );
+                },
+              ),
+            const SizedBox(height: 16),
+          ],
+        ),
       ),
     );
   }
