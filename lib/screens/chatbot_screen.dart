@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../services/chatbot_service.dart';
 import '../core/constants/colors.dart';
+import 'package:flutter_markdown/flutter_markdown.dart';
 
 class ChatbotScreen extends StatefulWidget {
   const ChatbotScreen({Key? key}) : super(key: key);
@@ -61,6 +62,78 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
         labelStyle: TextStyle(color: AppColors.splashBackground),
         onPressed: () => _sendMessage(text),
       ),
+    );
+  }
+
+  Widget _buildMessageContent(String text, bool isUser) {
+    if (isUser) {
+      return Text(
+        text,
+        style: const TextStyle(
+          color: Colors.white,
+          fontSize: 16,
+        ),
+      );
+    }
+
+    return MarkdownBody(
+      data: text,
+      styleSheet: MarkdownStyleSheet(
+        p: const TextStyle(
+          color: AppColors.textPrimary,
+          fontSize: 16,
+          height: 1.5,
+        ),
+        h1: const TextStyle(
+          color: AppColors.textPrimary,
+          fontSize: 20,
+          fontWeight: FontWeight.bold,
+          height: 1.5,
+        ),
+        h2: const TextStyle(
+          color: AppColors.textPrimary,
+          fontSize: 18,
+          fontWeight: FontWeight.bold,
+          height: 1.5,
+        ),
+        h3: const TextStyle(
+          color: AppColors.textPrimary,
+          fontSize: 16,
+          fontWeight: FontWeight.bold,
+          height: 1.5,
+        ),
+        listBullet: const TextStyle(
+          color: AppColors.textPrimary,
+          fontSize: 16,
+          height: 1.5,
+        ),
+        code: TextStyle(
+          backgroundColor: Colors.grey[200],
+          color: AppColors.textPrimary,
+          fontSize: 14,
+          fontFamily: 'monospace',
+        ),
+        codeblockDecoration: BoxDecoration(
+          color: Colors.grey[200],
+          borderRadius: BorderRadius.circular(8),
+        ),
+        blockquote: const TextStyle(
+          color: AppColors.textSecondary,
+          fontSize: 16,
+          fontStyle: FontStyle.italic,
+          height: 1.5,
+        ),
+        blockquoteDecoration: BoxDecoration(
+          border: Border(
+            left: BorderSide(
+              color: AppColors.splashBackground,
+              width: 4,
+            ),
+          ),
+        ),
+        blockquotePadding: const EdgeInsets.only(left: 16),
+      ),
+      selectable: true,
     );
   }
 
@@ -166,13 +239,7 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
                               bottomLeft: !isUser ? const Radius.circular(4) : null,
                             ),
                           ),
-                          child: Text(
-                            msg['text'] ?? '',
-                            style: TextStyle(
-                              color: isUser ? Colors.white : AppColors.textPrimary,
-                              fontSize: 16,
-                            ),
-                          ),
+                          child: _buildMessageContent(msg['text'] ?? '', isUser),
                         ),
                       ),
                       if (isUser) ...[
