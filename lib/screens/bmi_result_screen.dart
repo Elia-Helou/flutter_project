@@ -1,24 +1,87 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../core/constants/colors.dart';
+import '../services/database_service.dart';
+import '../providers/user_provider.dart';
 import 'dart:math' as math;
 
-class BMIResultScreen extends StatelessWidget {
+class BMIResultScreen extends StatefulWidget {
   final double bmi;
-  const BMIResultScreen({Key? key, required this.bmi}) : super(key: key);
+  final double weight;
+  final double height;
+  
+  const BMIResultScreen({
+    Key? key, 
+    required this.bmi,
+    required this.weight,
+    required this.height,
+  }) : super(key: key);
+
+  @override
+  State<BMIResultScreen> createState() => _BMIResultScreenState();
+}
+
+class _BMIResultScreenState extends State<BMIResultScreen> {
+  bool _isSaving = false;
+
+  Future<void> _saveResults() async {
+    setState(() {
+      _isSaving = true;
+    });
+
+    try {
+      final user = Provider.of<UserProvider>(context, listen: false).user;
+      if (user == null) {
+        throw Exception('User not logged in');
+      }
+
+      await DatabaseService.instance.saveBMIResults(
+        userId: user.id,
+        weight: widget.weight,
+        height: widget.height,
+        bmiValue: widget.bmi,
+      );
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('BMI results saved successfully!'),
+            backgroundColor: Colors.green,
+          ),
+        );
+        Navigator.of(context).popUntil((route) => route.isFirst);
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error saving results: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isSaving = false;
+        });
+      }
+    }
+  }
 
   String getBMICategory() {
-    if (bmi < 18.5) return 'UNDERWEIGHT';
-    if (bmi < 25) return 'NORMAL';
-    if (bmi < 30) return 'OVERWEIGHT';
+    if (widget.bmi < 18.5) return 'UNDERWEIGHT';
+    if (widget.bmi < 25) return 'NORMAL';
+    if (widget.bmi < 30) return 'OVERWEIGHT';
     return 'OBESE';
   }
 
   String getBMIMessage() {
-    if (bmi < 18.5) {
+    if (widget.bmi < 18.5) {
       return "Your BMI is below normal. Consider a balanced diet to reach a healthy weight.";
-    } else if (bmi < 25) {
+    } else if (widget.bmi < 25) {
       return "Congratulations! You're in a great place now.\nKeep up your healthy habits to maintain your healthy weight.";
-    } else if (bmi < 30) {
+    } else if (widget.bmi < 30) {
       return "Your BMI is above normal. Consider healthy eating and exercise.";
     } else {
       return "Your BMI is in the obese range. Consult a healthcare provider for advice.";
@@ -46,73 +109,107 @@ class BMIResultScreen extends StatelessWidget {
       ),
       body: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16.0),
-        child: Column(
-          children: [
-            const SizedBox(height: 16),
-            // Gauge
-            Center(
-              child: SizedBox(
-                width: 300,
-                height: 220,
-                child: CustomPaint(
-                  painter: _BMIGaugePainter(bmi: bmi),
-                ),
-              ),
-            ),
-            const SizedBox(height: 16),
-            const Text(
-              'Your BMI',
-              style: TextStyle(color: Colors.black, fontSize: 22, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              bmi.toStringAsFixed(1),
-              style: const TextStyle(
-                color: Colors.black,
-                fontSize: 56,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              getBMICategory(),
-              style: const TextStyle(
-                color: Colors.black,
-                fontSize: 22,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 24),
-            Text(
-              getBMIMessage(),
-              style: const TextStyle(color: Colors.black, fontSize: 16),
-              textAlign: TextAlign.center,
-            ),
-            const Spacer(),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: () => Navigator.of(context).popUntil((route) => route.isFirst),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.splashBackground,
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(30),
-                  ),
-                  elevation: 0,
-                ),
-                child: const Text(
-                  'OK',
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
+        child: SingleChildScrollView(
+          child: Column(
+            children: [
+              const SizedBox(height: 16),
+              // Gauge
+              Center(
+                child: SizedBox(
+                  width: 300,
+                  height: 220,
+                  child: CustomPaint(
+                    painter: _BMIGaugePainter(bmi: widget.bmi),
                   ),
                 ),
               ),
-            ),
-            const SizedBox(height: 24),
-          ],
+              const SizedBox(height: 16),
+              const Text(
+                'Your BMI',
+                style: TextStyle(color: Colors.black, fontSize: 22, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                widget.bmi.toStringAsFixed(1),
+                style: const TextStyle(
+                  color: Colors.black,
+                  fontSize: 56,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                getBMICategory(),
+                style: const TextStyle(
+                  color: Colors.black,
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 24),
+              Text(
+                getBMIMessage(),
+                style: const TextStyle(color: Colors.black, fontSize: 16),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 32),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: _isSaving ? null : _saveResults,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.splashBackground,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(30),
+                    ),
+                    elevation: 0,
+                  ),
+                  child: _isSaving
+                      ? const SizedBox(
+                          height: 20,
+                          width: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                          ),
+                        )
+                      : const Text(
+                          'Save Results',
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () => Navigator.of(context).popUntil((route) => route.isFirst),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.splashBackground,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(30),
+                    ),
+                    elevation: 0,
+                  ),
+                  child: const Text(
+                    'OK',
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 24),
+            ],
+          ),
         ),
       ),
     );

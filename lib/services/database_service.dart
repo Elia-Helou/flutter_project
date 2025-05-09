@@ -481,4 +481,42 @@ class DatabaseService {
       rethrow;
     }
   }
+
+  // Save BMI results to user_progress table
+  Future<void> saveBMIResults({
+    required int userId,
+    required double weight,
+    required double height,
+    required double bmiValue,
+  }) async {
+    try {
+      final conn = await connection;
+      await conn.execute(
+        Sql.named('''
+        INSERT INTO user_progress (
+          user_id,
+          weight,
+          height,
+          bmivalue,
+          logged_at
+        ) VALUES (
+          @userId,
+          CAST(@weight AS DECIMAL(5,2)),
+          CAST(@height AS DECIMAL(5,2)),
+          CAST(@bmiValue AS DECIMAL(5,2)),
+          CURRENT_TIMESTAMP
+        )
+        '''),
+        parameters: {
+          'userId': userId,
+          'weight': weight,
+          'height': height,
+          'bmiValue': bmiValue,
+        },
+      );
+    } catch (e) {
+      print('Error saving BMI results: $e');
+      rethrow;
+    }
+  }
 }

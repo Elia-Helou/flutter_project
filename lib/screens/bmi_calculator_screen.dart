@@ -113,7 +113,11 @@ class _BMICalculatorScreenState extends State<BMICalculatorScreen> {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => BMIResultScreen(bmi: bmi),
+                      builder: (context) => BMIResultScreen(
+                        bmi: bmi,
+                        weight: weight,
+                        height: heightCm,
+                      ),
                     ),
                   );
                 },
