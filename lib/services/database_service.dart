@@ -2,10 +2,11 @@ import 'package:postgres/postgres.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import '../models/user.dart';
+import 'package:flutter/foundation.dart';
 
 class DatabaseService {
   static DatabaseService? _instance;
-  Connection? _connection;
+  PostgreSQLConnection? _connection;
 
   DatabaseService._();
 
@@ -14,14 +15,13 @@ class DatabaseService {
     return _instance!;
   }
 
-  Future<Connection> get connection async {
-    if (_connection != null) return _connection!;
+  Future<PostgreSQLConnection> get connection async {
+    if (_connection != null && _connection!.isClosed == false) return _connection!;
     _connection = await _initConnection();
-    await _initializeDatabase();
     return _connection!;
   }
 
-  Future<Connection> _initConnection() async {
+  Future<PostgreSQLConnection> _initConnection() async {
     try {
       await dotenv.load();
 
@@ -31,52 +31,18 @@ class DatabaseService {
       final username = dotenv.env['DB_USERNAME'] ?? '';
       final password = dotenv.env['DB_PASSWORD'] ?? '';
 
-      final endpoint = Endpoint(
-        host: host,
-        port: port,
-        database: database,
+      final conn = PostgreSQLConnection(
+        host,
+        port,
+        database,
         username: username,
         password: password,
+        useSSL: false,
       );
-
-      final conn = await Connection.open(endpoint, settings: ConnectionSettings(
-        sslMode: SslMode.disable,
-      ));
-
+      await conn.open();
       return conn;
     } catch (e) {
       print('Error connecting to database: $e');
-      rethrow;
-    }
-  }
-
-  Future<void> _initializeDatabase() async {
-    try {
-      final conn = await connection;
-      
-      // Create users table
-      await conn.execute('''
-        CREATE TABLE IF NOT EXISTS users (
-          id SERIAL PRIMARY KEY,
-          email VARCHAR(255) UNIQUE NOT NULL,
-          password VARCHAR(255) NOT NULL,
-          first_name VARCHAR(100) NOT NULL,
-          last_name VARCHAR(100) NOT NULL,
-          date_of_birth DATE NOT NULL,
-          gender VARCHAR(20) NOT NULL,
-          height DECIMAL(5,2) NOT NULL,
-          weight DECIMAL(5,2) NOT NULL,
-          activity_level VARCHAR(50),
-          profile_image_url VARCHAR(255),
-          target_weight DECIMAL(5,2),
-          created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-          updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
-        );
-      ''');
-      
-      print('Database initialized successfully');
-    } catch (e) {
-      print('Error initializing database: $e');
       rethrow;
     }
   }
@@ -90,18 +56,14 @@ class DatabaseService {
   Future<User?> login(String email, String password) async {
     try {
       final conn = await connection;
-      final result = await conn.execute(
-        Sql.named('SELECT * FROM users WHERE email = @email'),
-        parameters: {
-          'email': email,
-        },
+      final result = await conn.query(
+        'SELECT * FROM users WHERE email = @email',
+        substitutionValues: {'email': email},
       );
-
       if (result.isEmpty) {
         return null;
       }
-
-      final userData = result.first.toColumnMap();
+      final userData = Map<String, dynamic>.from(result.first.toColumnMap());
       return User.fromMap(userData);
     } catch (e) {
       print('Error during login: $e');
@@ -125,20 +87,17 @@ class DatabaseService {
   }) async {
     try {
       final conn = await connection;
-      
       // Check if email already exists
-      final checkResult = await conn.execute(
-        Sql.named('SELECT id FROM users WHERE email = @email'),
-        parameters: {'email': email},
+      final checkResult = await conn.query(
+        'SELECT id FROM users WHERE email = @email',
+        substitutionValues: {'email': email},
       );
-      
       if (checkResult.isNotEmpty) {
         throw Exception('Email already exists');
       }
-
       // Insert new user
-      final result = await conn.execute(
-        Sql.named('''
+      final result = await conn.query(
+        '''
         INSERT INTO users (
           email, password, first_name, last_name,
           gender, date_of_birth, height, weight,
@@ -150,8 +109,8 @@ class DatabaseService {
           @phoneNumber,
           @activityLevel, @targetWeight
         ) RETURNING *
-        '''),
-        parameters: {
+        '''.replaceAll('\n', ' '),
+        substitutionValues: {
           'email': email,
           'password': password,
           'firstName': firstName,
@@ -165,12 +124,10 @@ class DatabaseService {
           'targetWeight': targetWeight,
         },
       );
-
       if (result.isEmpty) {
         return null;
       }
-
-      final userData = result.first.toColumnMap();
+      final userData = Map<String, dynamic>.from(result.first.toColumnMap());
       return User.fromMap(userData);
     } catch (e) {
       print('Error during signup: $e');
@@ -183,7 +140,7 @@ class DatabaseService {
     try {
       final conn = await connection;
       // Fetch unique categories and one image_url per category
-      final result = await conn.execute('''
+      final result = await conn.query('''
         SELECT categories, MIN(image_url) AS image_url
         FROM recipes
         WHERE categories IS NOT NULL AND categories != ''
@@ -205,7 +162,7 @@ class DatabaseService {
   Future<List<String>> fetchDistinctCategories() async {
     try {
       final conn = await connection;
-      final result = await conn.execute('''
+      final result = await conn.query('''
         SELECT DISTINCT categories
         FROM recipes
         WHERE categories IS NOT NULL AND categories != ''
@@ -223,8 +180,8 @@ class DatabaseService {
   Future<List<Map<String, dynamic>>> fetchRecipesByCategory(String category, {String searchQuery = ''}) async {
     try {
       final conn = await connection;
-      final result = await conn.execute(
-        Sql.named('''
+      final result = await conn.query(
+        '''
         SELECT id, name, image_url, CAST(total_calories AS INTEGER) as total_calories, CAST(total_protein AS DECIMAL(5,1)) as total_protein, CAST(total_fats AS DECIMAL(5,1)) as total_fats, CAST(total_carbohydrates AS DECIMAL(5,1)) as total_carbohydrates
         FROM recipes
         WHERE categories = @category
@@ -233,8 +190,8 @@ class DatabaseService {
           OR name ILIKE '%' || @search || '%'
         )
         ORDER BY name
-        '''),
-        parameters: {
+        '''.replaceAll('\n', ' '),
+        substitutionValues: {
           'category': category,
           'search': searchQuery.trim(),
         },
@@ -251,12 +208,12 @@ class DatabaseService {
   Future<bool> isRecipeFavorited(int userId, int recipeId) async {
     try {
       final conn = await connection;
-      final result = await conn.execute(
-        Sql.named('''
+      final result = await conn.query(
+        '''
         SELECT 1 FROM favorite_recipes
         WHERE user_id = @user_id AND recipe_id = @recipe_id
-        '''),
-        parameters: {
+        '''.replaceAll('\n', ' '),
+        substitutionValues: {
           'user_id': userId,
           'recipe_id': recipeId,
         },
@@ -272,13 +229,12 @@ class DatabaseService {
   Future<void> addToFavorites(int userId, int recipeId) async {
     try {
       final conn = await connection;
-      await conn.execute(
-        Sql.named('''
+      await conn.query('''
         INSERT INTO favorite_recipes (user_id, recipe_id)
         VALUES (@user_id, @recipe_id)
         ON CONFLICT (user_id, recipe_id) DO NOTHING
-        '''),
-        parameters: {
+        '''.replaceAll('\n', ' '),
+        substitutionValues: {
           'user_id': userId,
           'recipe_id': recipeId,
         },
@@ -293,12 +249,11 @@ class DatabaseService {
   Future<void> removeFromFavorites(int userId, int recipeId) async {
     try {
       final conn = await connection;
-      await conn.execute(
-        Sql.named('''
+      await conn.query('''
         DELETE FROM favorite_recipes
         WHERE user_id = @user_id AND recipe_id = @recipe_id
-        '''),
-        parameters: {
+        '''.replaceAll('\n', ' '),
+        substitutionValues: {
           'user_id': userId,
           'recipe_id': recipeId,
         },
@@ -315,32 +270,32 @@ class DatabaseService {
       final conn = await connection;
       
       // Fetch recipe details including ID
-      final recipeResult = await conn.execute(
-        Sql.named('''
+      final recipeResult = await conn.query(
+        '''
         SELECT *
         FROM recipes
         WHERE name = @name
         LIMIT 1
-        '''),
-        parameters: {'name': recipeName},
+        '''.replaceAll('\n', ' '),
+        substitutionValues: {'name': recipeName},
       );
 
       if (recipeResult.isEmpty) {
         return null;
       }
 
-      final recipeData = recipeResult.first.toColumnMap();
+      final recipeData = Map<String, dynamic>.from(recipeResult.first.toColumnMap());
 
       // Fetch ingredients separately
-      final ingredientsResult = await conn.execute(
-        Sql.named('''
+      final ingredientsResult = await conn.query(
+        '''
         SELECT f.name as food_name, ri.amount, ri.unit
         FROM recipe_ingredients ri
         JOIN recipes r ON r.id = ri.recipe_id
         JOIN foods f ON f.id = ri.food_id
         WHERE r.name = @name
-        '''),
-        parameters: {'name': recipeName},
+        '''.replaceAll('\n', ' '),
+        substitutionValues: {'name': recipeName},
       );
 
       // Convert ingredients to List<Map>
@@ -364,8 +319,8 @@ class DatabaseService {
   Future<List<Map<String, dynamic>>> fetchFavoriteRecipes(int userId, {String searchQuery = ''}) async {
     try {
       final conn = await connection;
-      final result = await conn.execute(
-        Sql.named('''
+      final result = await conn.query(
+        '''
         SELECT r.name, r.image_url, r.total_calories
         FROM recipes r
         JOIN favorite_recipes fr ON r.id = fr.recipe_id
@@ -375,8 +330,8 @@ class DatabaseService {
           OR r.name ILIKE '%' || @search || '%'
         )
         ORDER BY r.name
-        '''),
-        parameters: {
+        '''.replaceAll('\n', ' '),
+        substitutionValues: {
           'user_id': userId,
           'search': searchQuery.trim(),
         },
@@ -393,7 +348,7 @@ class DatabaseService {
   Future<List<String>> fetchDistinctFoodCategories() async {
     try {
       final conn = await connection;
-      final result = await conn.execute('''
+      final result = await conn.query('''
         SELECT DISTINCT category
         FROM foods
         WHERE category IS NOT NULL AND category != ''
@@ -411,8 +366,8 @@ class DatabaseService {
   Future<List<Map<String, dynamic>>> fetchFoodsByCategory(String category, {String searchQuery = ''}) async {
     try {
       final conn = await connection;
-      final result = await conn.execute(
-        Sql.named('''
+      final result = await conn.query(
+        '''
         SELECT 
           id,
           name, 
@@ -435,8 +390,8 @@ class DatabaseService {
           OR name ILIKE '%' || @search || '%'
         )
         ORDER BY name
-        '''),
-        parameters: {
+        '''.replaceAll('\n', ' '),
+        substitutionValues: {
           'category': category,
           'search': searchQuery.trim(),
         },
@@ -459,8 +414,8 @@ class DatabaseService {
   }) async {
     try {
       final conn = await connection;
-      await conn.execute(
-        Sql.named('''
+      await conn.query(
+        '''
         UPDATE users
         SET 
           height = @height,
@@ -469,8 +424,8 @@ class DatabaseService {
           target_weight = @targetWeight,
           updated_at = CURRENT_TIMESTAMP
         WHERE email = @email
-        '''),
-        parameters: {
+        '''.replaceAll('\n', ' '),
+        substitutionValues: {
           'email': email,
           'height': height,
           'weight': weight,
@@ -493,8 +448,8 @@ class DatabaseService {
   }) async {
     try {
       final conn = await connection;
-      await conn.execute(
-        Sql.named('''
+      await conn.query(
+        '''
         INSERT INTO user_progress (
           user_id,
           weight,
@@ -508,8 +463,8 @@ class DatabaseService {
           CAST(@bmiValue AS DECIMAL(5,2)),
           CURRENT_TIMESTAMP
         )
-        '''),
-        parameters: {
+        '''.replaceAll('\n', ' '),
+        substitutionValues: {
           'userId': userId,
           'weight': weight,
           'height': height,
@@ -536,15 +491,15 @@ class DatabaseService {
     required double carbs,
   }) async {
     final conn = await connection;
-    await conn.execute(
-      Sql.named('''
+    await conn.query(
+      '''
         INSERT INTO food_diary_entries (
           user_id, date, meal_type, food_id, recipe_id, quantity, calories, fats, protein, carbs
         ) VALUES (
           @userId, @date, @mealType, @foodId, @recipeId, @quantity, @calories, @fats, @protein, @carbs
         )
-      '''),
-      parameters: {
+      '''.replaceAll('\n', ' '),
+      substitutionValues: {
         'userId': userId,
         'date': date.toIso8601String().substring(0, 10),
         'mealType': mealType,
@@ -561,21 +516,21 @@ class DatabaseService {
 
   Future<void> deleteFoodDiaryEntry(int entryId) async {
     final conn = await connection;
-    await conn.execute(
-      Sql.named('DELETE FROM food_diary_entries WHERE id = @id'),
-      parameters: {'id': entryId},
+    await conn.query(
+      'DELETE FROM food_diary_entries WHERE id = @id',
+      substitutionValues: {'id': entryId},
     );
   }
 
   Future<List<Map<String, dynamic>>> fetchDiaryEntriesForDate(int userId, DateTime date) async {
     final conn = await connection;
-    final result = await conn.execute(
-      Sql.named('''
+    final result = await conn.query(
+      '''
         SELECT * FROM food_diary_entries
         WHERE user_id = @userId AND date = @date
         ORDER BY meal_type, created_at
-      '''),
-      parameters: {
+      '''.replaceAll('\n', ' '),
+      substitutionValues: {
         'userId': userId,
         'date': date.toIso8601String().substring(0, 10),
       },
@@ -585,8 +540,8 @@ class DatabaseService {
 
   Future<Map<String, dynamic>> fetchDiaryTotalsForDate(int userId, DateTime date) async {
     final conn = await connection;
-    final result = await conn.execute(
-      Sql.named('''
+    final result = await conn.query(
+      '''
         SELECT 
           COALESCE(SUM(calories),0) AS calories,
           COALESCE(SUM(fats),0) AS fats,
@@ -594,12 +549,28 @@ class DatabaseService {
           COALESCE(SUM(carbs),0) AS carbs
         FROM food_diary_entries
         WHERE user_id = @userId AND date = @date
-      '''),
-      parameters: {
+      '''.replaceAll('\n', ' '),
+      substitutionValues: {
         'userId': userId,
         'date': date.toIso8601String().substring(0, 10),
       },
     );
     return result.isNotEmpty ? result.first.toColumnMap() : {'calories': 0, 'fats': 0, 'protein': 0, 'carbs': 0};
+  }
+
+  Future<void> clearCache() async {
+    try {
+      // Close any existing connections
+      if (_connection != null) {
+        await _connection!.close();
+        _connection = null;
+      }
+      // No other cache to clear
+      // Force a new connection on next use
+      await connection;
+    } catch (e) {
+      debugPrint('Error clearing database cache: $e');
+      rethrow;
+    }
   }
 }

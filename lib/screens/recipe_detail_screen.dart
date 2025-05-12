@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../services/database_service.dart';
 import '../core/constants/colors.dart';
-import '../providers/user_provider.dart';
+import '../services/auth_service.dart';
 import 'package:provider/provider.dart';
 
 class RecipeDetailScreen extends StatefulWidget {
@@ -31,7 +31,7 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
   Future<Map<String, dynamic>?> _loadRecipeAndFavoriteStatus() async {
     final recipe = await DatabaseService.instance.fetchRecipeDetails(widget.recipeName);
     if (recipe != null) {
-      final user = Provider.of<UserProvider>(context, listen: false).user;
+      final user = Provider.of<AuthService>(context, listen: false).currentUser;
       if (user != null) {
         final isFavorite = await DatabaseService.instance.isRecipeFavorited(
           user.id,
@@ -53,7 +53,7 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
     });
 
     try {
-      final user = Provider.of<UserProvider>(context, listen: false).user;
+      final user = Provider.of<AuthService>(context, listen: false).currentUser;
       if (user == null) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Please log in to save favorites')),

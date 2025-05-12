@@ -49,5 +49,18 @@
 	<string>This app needs access to photo library to pick images</string>
 	<key>NSCameraUsageDescription</key>
 	<string>This app needs access to camera to take photos</string>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLName</key>
+			<string>com.example.healthapp</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>healthapp</string>
+			</array>
+		</dict>
+	</array>
 </dict>
 </plist>

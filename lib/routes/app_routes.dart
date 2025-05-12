@@ -11,6 +11,9 @@ import 'package:project/screens/diary_screen.dart';
 import 'package:project/screens/search_screen.dart';
 // import 'package:project/screens/add_screen.dart';
 // import 'package:project/screens/favorites_screen.dart';
+import 'package:project/screens/auth/forgot_password_screen.dart';
+import 'package:project/screens/auth/reset_password_screen.dart';
+import 'package:flutter/material.dart';
 
 class AppRoutes {
   static const String splash = '/splash';
@@ -24,8 +27,10 @@ class AppRoutes {
   static const String profile = '/profile';
   static const String scanFood = '/scanFood';
   static const String diary = '/diary';
+  static const String forgotPassword = '/forgot-password';
+  static const String resetPassword = '/reset-password';
 
-  static Map<String, dynamic> routes = {
+  static final Map<String, WidgetBuilder> routes = {
     splash: (context) => const SplashScreen(),
     onboarding: (context) => const OnboardingScreen(),
     login: (context) => const LoginScreen(),
@@ -37,5 +42,13 @@ class AppRoutes {
     profile: (context) => const ProfileScreen(),
     scanFood: (context) => const ScanFoodScreen(),
     diary: (context) => const DiaryScreen(),
+    forgotPassword: (context) => const ForgotPasswordScreen(),
+    resetPassword: (context) {
+      final args = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
+      return ResetPasswordScreen(
+        email: args['email'],
+        token: args['token'],
+      );
+    },
   };
 }

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../providers/user_provider.dart';
+import '../services/auth_service.dart';
 import '../services/database_service.dart';
 import '../core/constants/colors.dart';
 
@@ -29,11 +29,14 @@ class _EditFitnessGoalsScreenState extends State<EditFitnessGoalsScreen> {
   @override
   void initState() {
     super.initState();
-    final user = Provider.of<UserProvider>(context, listen: false).user;
+    final user = Provider.of<AuthService>(context, listen: false).currentUser;
     _heightController = TextEditingController(text: user?.height?.toString() ?? '');
     _weightController = TextEditingController(text: user?.weight?.toString() ?? '');
     _goalWeightController = TextEditingController(text: user?.goalWeight?.toString() ?? '');
     _selectedActivityLevel = user?.activityLevel ?? 'Sedentary';
+    if (!_activityLevels.contains(_selectedActivityLevel)) {
+      _selectedActivityLevel = _activityLevels.first;
+    }
   }
 
   @override
@@ -46,10 +49,8 @@ class _EditFitnessGoalsScreenState extends State<EditFitnessGoalsScreen> {
 
   void _saveFitnessGoals() async {
     if (_formKey.currentState?.validate() ?? false) {
-      final userProvider = Provider.of<UserProvider>(context, listen: false);
       final databaseService = DatabaseService.instance;
-      final user = userProvider.user;
-      
+      final user = Provider.of<AuthService>(context, listen: false).currentUser;
       if (user != null) {
         try {
           // Update in database
@@ -62,18 +63,6 @@ class _EditFitnessGoalsScreenState extends State<EditFitnessGoalsScreen> {
                 ? _goalWeightController.text.trim()
                 : null,
           );
-
-          // Update UI
-          final updatedUser = user.copyWith(
-            height: double.parse(_heightController.text.trim()),
-            weight: double.parse(_weightController.text.trim()),
-            activityLevel: _selectedActivityLevel,
-            goalWeight: _goalWeightController.text.trim().isNotEmpty
-                ? double.parse(_goalWeightController.text.trim())
-                : null,
-          );
-          userProvider.setUser(updatedUser);
-
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(content: Text('Fitness goals updated successfully')),

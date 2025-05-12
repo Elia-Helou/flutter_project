@@ -1,13 +1,14 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:http/http.dart' as http;
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class FoodRecognitionService {
-  static const String _baseUrl = 'http://10.0.2.2:5000';
+  //final String _baseUrl = 'http://10.0.2.2:5000';
+  final String _baseUrl = 'http://127.0.0.1:5000';
+
   static const String _calorieNinjasUrl = 'https://api.calorieninjas.com/v1/nutrition';
 
-  Future<String> recognizeFood(File imageFile) async {
+  Future<Map<String, String>> recognizeFood(File imageFile) async {
     try {
       var request = http.MultipartRequest('POST', Uri.parse('$_baseUrl/classify'));
       request.files.add(await http.MultipartFile.fromPath('image', imageFile.path));
@@ -17,7 +18,11 @@ class FoodRecognitionService {
       if (response.statusCode == 200) {
         var jsonResponse = json.decode(response.body);
         if (jsonResponse['status'] == 'success') {
-          return jsonResponse['result'];
+          final result = jsonResponse['result'];
+          return {
+            'detected_food': result['detected_food'] ?? '',
+            'nutrition_facts': result['nutrition_facts'] ?? '',
+          };
         } else {
           throw Exception(jsonResponse['error'] ?? 'Unknown error occurred');
         }
@@ -34,7 +39,7 @@ class FoodRecognitionService {
       final response = await http.get(
         Uri.parse('$_calorieNinjasUrl?query=$foodName'),
         headers: {
-          'X-Api-Key': dotenv.env['CALORIE_NINJAS_API_KEY'] ?? '',
+          'X-Api-Key': '',
         },
       );
 

@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import '../services/database_service.dart';
-import '../providers/user_provider.dart';
 import 'package:provider/provider.dart';
 import './recipe_detail_screen.dart';
 import '../core/constants/colors.dart';
+import '../services/auth_service.dart';
 
 class FavoritesScreen extends StatefulWidget {
   const FavoritesScreen({Key? key}) : super(key: key);
@@ -30,7 +30,7 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
   }
 
   Future<List<Map<String, dynamic>>> _fetchFavorites() async {
-    final user = Provider.of<UserProvider>(context, listen: false).user;
+    final user = Provider.of<AuthService>(context, listen: false).currentUser;
     if (user == null) {
       return [];
     }

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../core/constants/colors.dart';
 import '../services/database_service.dart';
-import '../providers/user_provider.dart';
+import '../services/auth_service.dart';
 import 'dart:math' as math;
 
 class BMIResultScreen extends StatefulWidget {
@@ -30,7 +30,7 @@ class _BMIResultScreenState extends State<BMIResultScreen> {
     });
 
     try {
-      final user = Provider.of<UserProvider>(context, listen: false).user;
+      final user = Provider.of<AuthService>(context, listen: false).currentUser;
       if (user == null) {
         throw Exception('User not logged in');
       }

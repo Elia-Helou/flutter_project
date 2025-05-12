@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../services/database_service.dart';
-import '../providers/user_provider.dart';
+import '../services/auth_service.dart';
 import '../core/constants/colors.dart';
 import 'dart:async';
 import 'dart:math';
@@ -31,7 +31,7 @@ class _DiaryScreenState extends State<DiaryScreen> {
   }
 
   Future<void> _loadDiaryData() async {
-    final user = Provider.of<UserProvider>(context, listen: false).user;
+    final user = Provider.of<AuthService>(context, listen: false).currentUser;
     if (user == null) return;
     final totals = await DatabaseService.instance.fetchDiaryTotalsForDate(user.id, _today);
     final entries = await DatabaseService.instance.fetchDiaryEntriesForDate(user.id, _today);
@@ -315,7 +315,7 @@ class _AddDiaryEntryModalState extends State<AddDiaryEntryModal> {
   }
 
   Future<void> _addEntry(Map<String, dynamic> item, double quantity) async {
-    final user = Provider.of<UserProvider>(context, listen: false).user;
+    final user = Provider.of<AuthService>(context, listen: false).currentUser;
     if (user == null) return;
     final now = DateTime.now();
     try {
@@ -356,9 +356,8 @@ class _AddDiaryEntryModalState extends State<AddDiaryEntryModal> {
       );
       widget.onEntryAdded();
     } catch (e) {
-      print('Error adding diary entry: $e');
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error adding entry: $e'), backgroundColor: Colors.red),
+        SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
       );
     }
   }

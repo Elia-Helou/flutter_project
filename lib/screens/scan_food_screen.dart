@@ -15,7 +15,7 @@ class _ScanFoodScreenState extends State<ScanFoodScreen> {
   final ImagePicker _picker = ImagePicker();
   final FoodRecognitionService _foodService = FoodRecognitionService();
   File? _selectedImage;
-  String? _geminiResult;
+  Map<String, String>? _foodResult;
   bool _isLoading = false;
   String? _error;
 
@@ -23,13 +23,13 @@ class _ScanFoodScreenState extends State<ScanFoodScreen> {
     setState(() {
       _isLoading = true;
       _error = null;
-      _geminiResult = null;
+      _foodResult = null;
     });
 
     try {
       final result = await _foodService.recognizeFood(imageFile);
       setState(() {
-        _geminiResult = result;
+        _foodResult = result;
         _isLoading = false;
       });
     } catch (e) {
@@ -104,7 +104,7 @@ class _ScanFoodScreenState extends State<ScanFoodScreen> {
                       onPressed: () {
                         setState(() {
                           _selectedImage = null;
-                          _geminiResult = null;
+                          _foodResult = null;
                         });
                       },
                     ),
@@ -135,14 +135,29 @@ class _ScanFoodScreenState extends State<ScanFoodScreen> {
                                     width: double.infinity,
                                     fit: BoxFit.cover,
                                   ),
-                                  if (_geminiResult != null)
+                                  if (_foodResult != null)
                                     Card(
                                       margin: const EdgeInsets.all(16),
                                       child: Padding(
                                         padding: const EdgeInsets.all(16),
-                                        child: Text(
-                                          _geminiResult!,
-                                          style: const TextStyle(fontSize: 16),
+                                        child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            if ((_foodResult!['detected_food'] ?? '').isNotEmpty)
+                                              Text(
+                                                'Detected Food: ${_foodResult!['detected_food']}',
+                                                style: const TextStyle(
+                                                  fontSize: 18,
+                                                  fontWeight: FontWeight.bold,
+                                                ),
+                                              ),
+                                            const SizedBox(height: 8),
+                                            if ((_foodResult!['nutrition_facts'] ?? '').isNotEmpty)
+                                              Text(
+                                                _foodResult!['nutrition_facts']!,
+                                                style: const TextStyle(fontSize: 16),
+                                              ),
+                                          ],
                                         ),
                                       ),
                                     ),

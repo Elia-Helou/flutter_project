@@ -6,6 +6,8 @@ import '../providers/user_provider.dart';
 import './favorites_screen.dart';
 import 'bmi_calculator_screen.dart';
 import 'chatbot_screen.dart';
+import '../services/auth_service.dart';
+import '../widgets/water_tracker_widget.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
@@ -53,7 +55,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final user = Provider.of<UserProvider>(context).user;
+    final authService = Provider.of<AuthService>(context);
+    final user = authService.currentUser;
     final userName = user != null ? user.firstName : 'User';
 
     return Scaffold(
@@ -63,9 +66,9 @@ class _HomeScreenState extends State<HomeScreen> {
         actions: [
           IconButton(
             icon: const Icon(Icons.logout),
-            onPressed: () {
-              // Clear any stored credentials if needed
-              Navigator.pushReplacementNamed(context, '/login');
+            onPressed: () async {
+              await authService.logout();
+              // No need to navigate, the Consumer in main.dart will handle it
             },
           ),
         ],
@@ -77,30 +80,6 @@ class _HomeScreenState extends State<HomeScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Add the AI Coach button at the top
-                Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: ElevatedButton.icon(
-                    icon: Icon(Icons.chat_bubble_outline),
-                    label: Text('Ask AI Coach'),
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (context) => ChatbotScreen()),
-                      );
-                    },
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                  child: ElevatedButton.icon(
-                    icon: Icon(Icons.restaurant_menu),
-                    label: Text("Track Today's Food"),
-                    onPressed: () {
-                      Navigator.pushNamed(context, '/diary');
-                    },
-                  ),
-                ),
                 // Greeting
                 Text(
                   'Hello $userName,',
@@ -131,24 +110,27 @@ class _HomeScreenState extends State<HomeScreen> {
                       },
                     ),
                     _QuickActionCard(
-                      icon: Icons.lightbulb,
-                      label: 'Tips',
+                      icon: Icons.chat_bubble_outline,
+                      label: 'AI Coach',
                       onTap: () {
-                        Navigator.pushNamed(context, '/tips');
-                      },
-                    ),
-                    _QuickActionCard(
-                      icon: Icons.shopping_cart,
-                      label: 'Shopping list',
-                      onTap: () {
-                        Navigator.pushNamed(context, '/shopping');
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => ChatbotScreen()),
+                        );
                       },
                     ),
                     _QuickActionCard(
                       icon: Icons.show_chart,
                       label: 'Progress',
                       onTap: () {
-                        Navigator.pushNamed(context, '/progress');
+                        Navigator.pushNamed(context, '/diary');
+                      },
+                    ),
+                    _QuickActionCard(
+                      icon: Icons.camera_alt,
+                      label: 'Scan Food',
+                      onTap: () {
+                        Navigator.pushNamed(context, '/scanFood');
                       },
                     ),
                   ],
@@ -216,6 +198,12 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                     ],
                   ),
+                ),
+                const SizedBox(height: 24),
+                // Water Tracker Widget
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 8.0),
+                  child: WaterTrackerWidget(),
                 ),
                 const SizedBox(height: 24),
                 const Text('Choose Your Favorites', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../providers/user_provider.dart';
 import '../services/auth_service.dart';
 import '../core/constants/colors.dart';
 
@@ -24,7 +23,7 @@ class _EditAccountScreenState extends State<EditAccountScreen> {
   @override
   void initState() {
     super.initState();
-    final user = Provider.of<UserProvider>(context, listen: false).user;
+    final user = Provider.of<AuthService>(context, listen: false).currentUser;
     _emailController = TextEditingController(text: user?.email ?? '');
     _currentPasswordController = TextEditingController();
     _newPasswordController = TextEditingController();
@@ -42,16 +41,13 @@ class _EditAccountScreenState extends State<EditAccountScreen> {
 
   void _saveAccountInfo() async {
     if (_formKey.currentState?.validate() ?? false) {
-      final userProvider = Provider.of<UserProvider>(context, listen: false);
       final authService = Provider.of<AuthService>(context, listen: false);
-      final user = userProvider.user;
-      
+      final user = authService.currentUser;
       if (user != null) {
         try {
           // If either email is changed or password is being updated, verify current password
           if (_emailController.text.trim() != user.email || 
               (_currentPasswordController.text.isNotEmpty && _newPasswordController.text.isNotEmpty)) {
-            
             // Verify current password
             if (_currentPasswordController.text.isEmpty) {
               if (mounted) {
@@ -61,12 +57,10 @@ class _EditAccountScreenState extends State<EditAccountScreen> {
               }
               return;
             }
-
             final isPasswordCorrect = await authService.verifyPassword(
               user.email,
               _currentPasswordController.text,
             );
-
             if (!isPasswordCorrect) {
               if (mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(
@@ -76,24 +70,15 @@ class _EditAccountScreenState extends State<EditAccountScreen> {
               return;
             }
           }
-
           // If email has changed, update it
           if (_emailController.text.trim() != user.email) {
             await authService.updateEmail(user.email, _emailController.text.trim());
           }
-
           // If password fields are filled, update password
           if (_currentPasswordController.text.isNotEmpty &&
               _newPasswordController.text.isNotEmpty) {
             await authService.updatePassword(_emailController.text.trim(), _newPasswordController.text);
           }
-
-          // Update UI
-          final updatedUser = user.copyWith(
-            email: _emailController.text.trim(),
-          );
-          userProvider.setUser(updatedUser);
-
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(content: Text('Account updated successfully')),

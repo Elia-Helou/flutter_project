@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../providers/user_provider.dart';
 import '../services/auth_service.dart';
 import '../core/constants/colors.dart';
 
@@ -22,7 +21,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   @override
   void initState() {
     super.initState();
-    final user = Provider.of<UserProvider>(context, listen: false).user;
+    final user = Provider.of<AuthService>(context, listen: false).currentUser;
     _firstNameController = TextEditingController(text: user?.firstName ?? '');
     _lastNameController = TextEditingController(text: user?.lastName ?? '');
     _phoneController = TextEditingController(text: user?.phoneNumber?.toString() ?? '');
@@ -63,9 +62,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
   void _savePersonalInfo() async {
     if (_formKey.currentState?.validate() ?? false) {
-      final userProvider = Provider.of<UserProvider>(context, listen: false);
       final authService = Provider.of<AuthService>(context, listen: false);
-      final user = userProvider.user;
+      final user = authService.currentUser;
       
       if (user != null) {
         try {
@@ -81,16 +79,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
             gender: _selectedGender,
             dateOfBirth: dateString
           );
-
-          // Update UI
-          final updatedUser = user.copyWith(
-            firstName: _firstNameController.text.trim(),
-            lastName: _lastNameController.text.trim(),
-            phoneNumber: _phoneController.text.trim(),
-            gender: _selectedGender,
-            dateOfBirth: dateString,
-          );
-          userProvider.setUser(updatedUser);
 
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
@@ -111,7 +99,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final user = Provider.of<UserProvider>(context).user;
+    final user = Provider.of<AuthService>(context).currentUser;
     String assetPath = '';
     if (user?.profileImageUrl != null && user!.profileImageUrl!.startsWith('/users/')) {
       assetPath = 'assets/images/users/' + user.profileImageUrl!.split('/').last;

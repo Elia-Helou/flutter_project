@@ -6,16 +6,28 @@ import 'edit_profile_screen.dart';
 import 'edit_account_screen.dart';
 import 'terms_privacy_screen.dart';
 import 'edit_fitness_goals_screen.dart';
+import '../services/auth_service.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    final user = Provider.of<UserProvider>(context).user;
-    final name = user != null ? "${user.firstName} ${user.lastName}" : "User";
+    final authService = Provider.of<AuthService>(context);
+    if (authService.isLoading) {
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+    final user = authService.currentUser;
+    if (user == null) {
+      return const Scaffold(
+        body: Center(child: Text('No user data found.')),
+      );
+    }
+    final name = "${user.firstName} ${user.lastName}";
     final subtitle = "Food Blogger"; // Placeholder, can be dynamic later
-    final profileImagePath = user?.profileImageUrl ?? '';
+    final profileImagePath = user.profileImageUrl ?? '';
     String assetPath = '';
     if (profileImagePath.startsWith('/users/')) {
       assetPath = 'assets/images/users/' + profileImagePath.split('/').last;

@@ -9,6 +9,7 @@ import 'screens/home_screen.dart';
 import 'providers/user_provider.dart';
 import 'routes/app_routes.dart';
 import 'screens/bmi_calculator_screen.dart';
+import 'services/deep_link_service.dart';
 // import 'screens/onboarding_screen.dart';
 
 void main() async {
@@ -23,8 +24,28 @@ void main() async {
   runApp(const MyApp());
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
   const MyApp({super.key});
+
+  @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  DeepLinkService? _deepLinkService;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _deepLinkService?.dispose();
+    _deepLinkService = DeepLinkService(context);
+  }
+
+  @override
+  void dispose() {
+    _deepLinkService?.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -40,7 +61,14 @@ class MyApp extends StatelessWidget {
           colorScheme: ColorScheme.fromSeed(seedColor: Colors.green),
           useMaterial3: true,
         ),
-        initialRoute: '/splash',
+        home: Consumer<AuthService>(
+          builder: (context, authService, _) {
+            if (authService.isLoading) {
+              return const Center(child: CircularProgressIndicator());
+            }
+            return authService.isLoggedIn ? const HomeScreen() : const SplashScreen();
+          },
+        ),
         routes: Map<String, WidgetBuilder>.from(AppRoutes.routes)
           ..addAll({
             '/bmi': (context) => const BMICalculatorScreen(),

@@ -116,9 +116,7 @@ class OnboardingPage extends StatelessWidget {
                   ),
                   recognizer: TapGestureRecognizer()
                     ..onTap = () {
-                      // TODO: Implement login navigation/action
-                      print("Log In tapped!");
-                      // if (onLoginPressed != null) onLoginPressed!();
+                      Navigator.pushReplacementNamed(context, '/login');
                     },
                 ),
               ],

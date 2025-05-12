@@ -8,14 +8,14 @@ class DatabaseHelper {
   factory DatabaseHelper() => _instance;
   DatabaseHelper._internal();
 
-  Future<Connection> get connection async {
+  Future<PostgreSQLConnection> get connection async {
     return await DatabaseService.instance.connection;
   }
 
   Future<bool> checkConnection() async {
     try {
       final conn = await connection;
-      final result = await conn.execute('SELECT 1');
+      final result = await conn.query('SELECT 1');
       return result.isNotEmpty;
     } catch (e) {
       debugPrint('Connection check failed: $e');
@@ -40,9 +40,9 @@ class DatabaseHelper {
       final conn = await connection;
       
       // Check if user already exists
-      final checkResult = await conn.execute(
-        Sql.named('SELECT COUNT(*) FROM users WHERE email = @email'),
-        parameters: {'email': email},
+      final checkResult = await conn.query(
+        'SELECT COUNT(*) FROM users WHERE email = @email',
+        substitutionValues: {'email': email},
       );
 
       if (checkResult.isNotEmpty && (checkResult.first[0] as int) > 0) {
@@ -50,8 +50,8 @@ class DatabaseHelper {
       }
 
       // Insert new user
-      await conn.execute(
-        Sql.named('''
+      await conn.query(
+        '''
         INSERT INTO users (
           email, password, first_name, last_name,
           gender, date_of_birth, height, weight,
@@ -63,8 +63,8 @@ class DatabaseHelper {
           @phoneNumber,
           @activityLevel, @targetWeight
         )
-        '''),
-        parameters: {
+        '''.replaceAll('\n', ' '),
+        substitutionValues: {
           'email': email,
           'password': password,
           'firstName': firstName,
@@ -89,16 +89,16 @@ class DatabaseHelper {
   Future<Map<String, dynamic>?> getUserByEmail(String email) async {
     try {
       final conn = await connection;
-      final result = await conn.execute(
-        Sql.named('SELECT * FROM users WHERE email = @email'),
-        parameters: {'email': email},
+      final result = await conn.query(
+        'SELECT * FROM users WHERE email = @email',
+        substitutionValues: {'email': email},
       );
 
       if (result.isEmpty) {
         return null;
       }
 
-      final row = result.first.toColumnMap();
+      final row = Map<String, dynamic>.from(result.first.toColumnMap());
       debugPrint('DB row: $row');
       return row;
     } catch (e) {
@@ -118,8 +118,8 @@ class DatabaseHelper {
     try {
       final conn = await connection;
       
-      await conn.execute(
-        Sql.named('''
+      await conn.query(
+        '''
         UPDATE users SET
           first_name = @firstName,
           last_name = @lastName,
@@ -128,8 +128,8 @@ class DatabaseHelper {
           date_of_birth = @dateOfBirth,
           updated_at = CURRENT_TIMESTAMP
         WHERE email = @email
-        '''),
-        parameters: {
+        '''.replaceAll('\n', ' '),
+        substitutionValues: {
           'email': email,
           'firstName': firstName,
           'lastName': lastName,
@@ -150,9 +150,9 @@ class DatabaseHelper {
     try {
       final conn = await connection;
       
-      await conn.execute(
-        Sql.named('UPDATE users SET password = @password, updated_at = CURRENT_TIMESTAMP WHERE email = @email'),
-        parameters: {
+      await conn.query(
+        'UPDATE users SET password = @password, updated_at = CURRENT_TIMESTAMP WHERE email = @email',
+        substitutionValues: {
           'email': email,
           'password': newPassword,
         },
@@ -170,18 +170,18 @@ class DatabaseHelper {
       final conn = await connection;
       
       // Check if new email already exists
-      final checkResult = await conn.execute(
-        Sql.named('SELECT COUNT(*) FROM users WHERE email = @email'),
-        parameters: {'email': newEmail},
+      final checkResult = await conn.query(
+        'SELECT COUNT(*) FROM users WHERE email = @email',
+        substitutionValues: {'email': newEmail},
       );
 
       if (checkResult.isNotEmpty && (checkResult.first[0] as int) > 0) {
         throw Exception('Email already in use');
       }
 
-      await conn.execute(
-        Sql.named('UPDATE users SET email = @newEmail, updated_at = CURRENT_TIMESTAMP WHERE email = @currentEmail'),
-        parameters: {
+      await conn.query(
+        'UPDATE users SET email = @newEmail, updated_at = CURRENT_TIMESTAMP WHERE email = @currentEmail',
+        substitutionValues: {
           'currentEmail': currentEmail,
           'newEmail': newEmail,
         },
@@ -192,5 +192,16 @@ class DatabaseHelper {
       debugPrint('Error updating email: $e');
       rethrow;
     }
+  }
+
+  Future<void> updateUserResetCode(String email, String? resetCode) async {
+    final conn = await connection;
+    await conn.query(
+      'UPDATE users SET reset_code = @resetCode WHERE email = @email',
+      substitutionValues: {
+        'email': email,
+        'resetCode': resetCode,
+      },
+    );
   }
 } 

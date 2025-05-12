@@ -43,7 +43,7 @@ class User extends BaseModel {
       password: map['password'] as String,
       firstName: map['first_name'] as String,
       lastName: map['last_name'] as String,
-      phoneNumber: map['phone_number'] as String? ?? '', // Handle null for phoneNumber
+      phoneNumber: map['phone_number']?.toString() ?? '', // Handle int for phoneNumber
       gender: map['gender'] as String,
       dateOfBirth: map['date_of_birth'] is String
           ? DateTime.parse(map['date_of_birth'] as String).toIso8601String()
